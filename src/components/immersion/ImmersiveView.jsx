@@ -23,6 +23,7 @@ export default function ImmersiveView({ spaces, current, onSelect, onOpenMixer, 
   const [zoomOrigin, setZoomOrigin] = useState("center center");
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
+  const [showPoints, setShowPoints] = useState(false);
   const dragStart = useRef(null);
   const reqIdRef = useRef(0);
 
@@ -31,6 +32,7 @@ export default function ImmersiveView({ spaces, current, onSelect, onOpenMixer, 
     setZoom(1);
     setPan({ x: 0, y: 0 });
     setZoomOrigin("center center");
+    setShowPoints(false);
   }, [current]);
 
   function zoomTo(origin) {
@@ -119,13 +121,27 @@ export default function ImmersiveView({ spaces, current, onSelect, onOpenMixer, 
           </div>
         )}
 
-        {/* zoom markers spread across the image */}
+        {/* toggle to reveal the zoom markers */}
         {url && !loading && zoom <= 1 && (
+          <button
+            onClick={() => setShowPoints((s) => !s)}
+            className="absolute bottom-3 right-3 inline-flex items-center justify-center w-9 h-9 rounded-full bg-[#0A0D12]/70 border border-[#00C4AA]/50 text-[#00C4AA] hover:bg-[#00C4AA] hover:text-[#0A0D12] transition-colors"
+            title={showPoints ? "Masquer les points" : "Afficher les points de zoom"}
+          >
+            <Plus size={16} />
+          </button>
+        )}
+
+        {/* zoom markers spread across the image — shown only when toggled on */}
+        {url && !loading && zoom <= 1 && showPoints && (
           <>
             {ZOOM_POINTS.map((p, i) => (
               <button
                 key={i}
-                onClick={() => zoomTo(`${p.x}% ${p.y}%`)}
+                onClick={() => {
+                  zoomTo(`${p.x}% ${p.y}%`);
+                  setShowPoints(false);
+                }}
                 className="absolute inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#0A0D12]/70 border border-[#00C4AA]/50 text-[#00C4AA] hover:bg-[#00C4AA] hover:text-[#0A0D12] transition-colors"
                 style={{ left: `calc(${p.x}% - 16px)`, top: `calc(${p.y}% - 16px)` }}
                 title="Acercarse"
