@@ -14,7 +14,7 @@ export const ARCHIVES = [
   },
   {
     id: "paix",
-    video: "https://media.base44.com/videos/public/6aa7513a351693c76f22216c/f70afa180_BNFt.mp4",
+    video: "https://media.base44.com/videos/public/6aa7513a351693c76f22216c/85ec443f4_paix.mp4",
     label: "Conférence de la Paix, Paris 1919",
     asr:
       "euh la conférence euh de la paix hm qui s'est tenue à versailles euh en mille neuf cent dix-neuf a réuni euh les représentants de euh vingt-sept nations...",
