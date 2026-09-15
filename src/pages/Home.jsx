@@ -5,6 +5,7 @@ import Cinema from "@/pages/Cinema";
 import Mixeur from "@/pages/Mixeur";
 import ChatGallica from "@/pages/ChatGallica";
 import ImmersionTab from "@/components/immersion/ImmersionTab";
+import Studio from "@/pages/Studio";
 
 
 export default function Home() {
@@ -23,11 +24,7 @@ export default function Home() {
         {activeTab === "explorateur" && <Explorateur />}
         {activeTab === "cinema" && <Cinema carriedDoc={carriedDoc} />}
         {activeTab === "mixeur" && <Mixeur />}
-        {activeTab === "studio" && (
-          <div className="h-full flex items-center justify-center text-[#9CA3AF]">
-            Studio Spatialisation · contenu déjà présent dans le prompt initial.
-          </div>
-        )}
+        {activeTab === "studio" && <Studio />}
         {activeTab === "immersion" && (
           <ImmersionTab
             onOpenMixer={() => setActiveTab("mixeur")}

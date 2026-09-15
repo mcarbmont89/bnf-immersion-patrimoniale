@@ -188,6 +188,36 @@ class AudioEngine {
     }
     return await offline.startRendering();
   }
+
+  // Render a multi-source timeline to a single binaural buffer of fixed max duration.
+  // Each source starts at its startTime, plays its (optionally trimmed) length once, no loop.
+  async renderTimeline(sources, maxDurationSec) {
+    if (!sources.length) throw new Error("Aucune source à mixer");
+    const sampleRate = sources[0].buffer.sampleRate;
+    const OfflineCtor = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    const length = Math.ceil(maxDurationSec * sampleRate);
+    const offline = new OfflineCtor(2, length, sampleRate);
+    for (const s of sources) {
+      const startSec = Math.max(0, s.startTime || 0);
+      if (startSec >= maxDurationSec) continue;
+      const trimDur = s.trim ?? s.buffer.duration;
+      const playDur = Math.max(0, Math.min(trimDur, maxDurationSec - startSec));
+      if (playDur <= 0) continue;
+      const src = offline.createBufferSource();
+      src.buffer = s.buffer;
+      src.loop = false;
+      const panner = makePanner(offline);
+      const gain = offline.createGain();
+      gain.gain.value = (s.volume ?? 80) / 100;
+      const { x, y, z } = sphericalToCartesian(s.az, s.el ?? 0, s.dist);
+      setPannerPosition(panner, x, y, z, 0);
+      src.connect(panner);
+      panner.connect(gain);
+      gain.connect(offline.destination);
+      src.start(startSec, 0, playDur);
+    }
+    return await offline.startRendering();
+  }
 }
 
 export const audioEngine = new AudioEngine();
