@@ -1,11 +1,20 @@
 import React, { useState } from "react";
 import FloorPlan from "@/components/immersion/FloorPlan";
+import FloorPlanSorbonne from "@/components/immersion/FloorPlanSorbonne";
 import ImmersiveView from "@/components/immersion/ImmersiveView";
-import { SPACES } from "@/components/immersion/spaces";
+import { SPACES, SORBONNE_SPACES } from "@/components/immersion/spaces";
 
 export default function ImmersionTab({ onOpenMixer, carriedDoc }) {
+  const [tour, setTour] = useState("richelieu");
+  const spaces = tour === "sorbonne" ? SORBONNE_SPACES : SPACES;
   const [selected, setSelected] = useState(2); // default: Tables de lecture
-  const current = SPACES.find((s) => s.id === selected);
+  const current = spaces.find((s) => s.id === selected);
+
+  function switchTour(t) {
+    if (t === tour) return;
+    setTour(t);
+    setSelected(t === "sorbonne" ? 1 : 2);
+  }
 
   return (
     <div className="flex flex-col lg:flex-row gap-4 h-full min-h-0">
@@ -14,8 +23,24 @@ export default function ImmersionTab({ onOpenMixer, carriedDoc }) {
         <div className="text-[11px] uppercase tracking-widest text-[#00C4AA] font-semibold">
           Par Dedans
         </div>
-        <div className="text-white text-sm font-medium mt-0.5">
-          Salle Ovale · Richelieu
+        <div className="flex gap-1.5 mt-1.5">
+          <button
+            onClick={() => switchTour("richelieu")}
+            className="rounded-full px-2.5 py-1 text-[10px] font-bold transition-colors"
+            style={{ background: tour === "richelieu" ? "#00C4AA" : "#1F2937", color: tour === "richelieu" ? "#0A0D12" : "#9CA3AF" }}
+          >
+            Richelieu
+          </button>
+          <button
+            onClick={() => switchTour("sorbonne")}
+            className="rounded-full px-2.5 py-1 text-[10px] font-bold transition-colors"
+            style={{ background: tour === "sorbonne" ? "#00C4AA" : "#1F2937", color: tour === "sorbonne" ? "#0A0D12" : "#9CA3AF" }}
+          >
+            Sorbonne
+          </button>
+        </div>
+        <div className="text-white text-sm font-medium mt-1.5">
+          {tour === "sorbonne" ? "Sorbonne · Quartier Latin" : "Salle Ovale · Richelieu"}
         </div>
 
         {carriedDoc && carriedDoc.target === "immersion" && (
@@ -36,11 +61,19 @@ export default function ImmersionTab({ onOpenMixer, carriedDoc }) {
         )}
 
         <div className="mt-3 rounded-lg overflow-hidden border border-white/10">
-          <FloorPlan
-            spaces={SPACES}
-            selectedId={selected}
-            onSelect={setSelected}
-          />
+          {tour === "sorbonne" ? (
+            <FloorPlanSorbonne
+              spaces={SORBONNE_SPACES}
+              selectedId={selected}
+              onSelect={setSelected}
+            />
+          ) : (
+            <FloorPlan
+              spaces={SPACES}
+              selectedId={selected}
+              onSelect={setSelected}
+            />
+          )}
         </div>
 
         <div className="mt-3 text-[13px] text-[#9CA3AF]">
@@ -57,10 +90,11 @@ export default function ImmersionTab({ onOpenMixer, carriedDoc }) {
       {/* RIGHT PANEL — 70% */}
       <main className="lg:w-[70%] flex-1 min-w-0 flex flex-col min-h-0">
         <ImmersiveView
-          spaces={SPACES}
+          spaces={spaces}
           current={selected}
           onSelect={setSelected}
           onOpenMixer={onOpenMixer}
+          archiveIds={tour === "richelieu" ? [4, 6] : []}
         />
       </main>
     </div>

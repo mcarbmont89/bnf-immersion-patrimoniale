@@ -59,6 +59,67 @@ export const SPACES = [
   }
 ];
 
+// The 8 numbered spaces of a Sorbonne heritage tour (Quartier Latin, Paris).
+// x/y are positions on the 400x300 floor-plan SVG viewBox.
+export const SORBONNE_SPACES = [
+  {
+    id: 1,
+    name: "Cour d'honneur",
+    x: 200, y: 258,
+    prompt:
+      "Grand entrance courtyard (cour d'honneur) of the Sorbonne university in Paris. View from inside the courtyard looking toward the monumental gated entrance. Classical limestone facade, symmetrical wings, cobblestones, a few students passing. Historic academic architecture, tall windows, slate roofs. Warm afternoon light. Photorealistic, cinematic, 4K quality."
+  },
+  {
+    id: 2,
+    name: "Grand amphithéâtre",
+    x: 70, y: 155,
+    prompt:
+      "Historic grand amphitheater of the Sorbonne. Tiered wooden benches curving around a rostrum, green velvet seats, large arched windows casting light. Busts of scholars on the walls. Ornate plaster ceiling. Solemn academic atmosphere. Photorealistic, cinematic, 4K quality."
+  },
+  {
+    id: 3,
+    name: "Chapelle de la Sorbonne",
+    x: 200, y: 70,
+    prompt:
+      "Baroque chapel of the Sorbonne, interior. White and gold stucco, ornate dome, marble floor, gilded altar. Cardinal Richelieu's tomb visible. Soft light from the dome oculus. Sacred, hushed atmosphere. Photorealistic, cinematic, 4K quality."
+  },
+  {
+    id: 4,
+    name: "Bibliothèque",
+    x: 330, y: 155,
+    prompt:
+      "Historic library of the Sorbonne. Tall wooden bookshelves, reading desks with green lamps, vaulted ceiling, stained glass. Scholars reading quietly. Warm golden light. Photorealistic, cinematic, 4K quality."
+  },
+  {
+    id: 5,
+    name: "Escalier d'honneur",
+    x: 200, y: 155,
+    prompt:
+      "Monumental staircase of honor in the Sorbonne. Marble steps, wrought-iron banister, stone balustrades, large arched window on the landing. Light streaming down from above. Grand Belle Époque academic architecture. Photorealistic, cinematic, 4K quality."
+  },
+  {
+    id: 6,
+    name: "Salle Louis Liard",
+    x: 110, y: 90,
+    prompt:
+      "Elegant conference room 'Salle Louis Liard' of the Sorbonne. Wood-paneled walls, portrait paintings of scholars, long central table, chandeliers, parquet floor. Formal academic setting. Photorealistic, cinematic, 4K quality."
+  },
+  {
+    id: 7,
+    name: "Galerie des bustes",
+    x: 290, y: 90,
+    prompt:
+      "Long gallery of the Sorbonne lined with marble busts of French intellectuals and scholars. Polished stone floor, arched ceiling, soft daylight from side windows. Quiet, dignified atmosphere. Photorealistic, cinematic, 4K quality."
+  },
+  {
+    id: 8,
+    name: "Jardin et cloître",
+    x: 300, y: 225,
+    prompt:
+      "Inner garden and cloister of the Sorbonne. Lush green courtyard, arcaded gallery, linden trees, stone fountain, peaceful atmosphere. Historic academic architecture surrounding the garden. Photorealistic, cinematic, 4K quality."
+  }
+];
+
 export const SOUND_ARCHIVE = {
   titre: "Entretien Métropolitain : L'Artisanat de l'Ameublement à Paris",
   fonds: "AP_000201 · 01:01 · mono"

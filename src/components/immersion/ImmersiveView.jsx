@@ -5,7 +5,7 @@ import { Image } from "@/components/ui/image";
 import SoundArchiveCard from "./SoundArchiveCard";
 import SpaceNavigator from "./SpaceNavigator";
 
-export default function ImmersiveView({ spaces, current, onSelect, onOpenMixer }) {
+export default function ImmersiveView({ spaces, current, onSelect, onOpenMixer, archiveIds }) {
   const [cache, setCache] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -15,7 +15,7 @@ export default function ImmersiveView({ spaces, current, onSelect, onOpenMixer }
   const space = spaces.find((s) => s.id === current);
   const total = spaces.length;
   const idx = spaces.findIndex((s) => s.id === current);
-  const hasArchive = [4, 6].includes(current);
+  const hasArchive = (archiveIds || [4, 6]).includes(current);
 
   // Generate the view whenever the selected space changes (and not cached).
   useEffect(() => {
