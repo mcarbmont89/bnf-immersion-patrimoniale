@@ -40,6 +40,7 @@ export default function SearchPanel({ onAdd }) {
       label: rec.title,
       metadata: `Gallica · ${rec.ark} · ${rec.date || ""} · ${rec.creator || ""}`.trim(),
       ark: rec.ark,
+      type: rec.type || "",
       custom: true
     };
     onAdd(doc);

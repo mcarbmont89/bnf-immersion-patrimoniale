@@ -4,7 +4,7 @@ import { DOCUMENTS, OUT_OF_SCOPE } from "@/components/chat/documents";
 import MessageBubble, { TypingIndicator } from "@/components/chat/MessageBubble";
 import SearchPanel from "@/components/chat/SearchPanel";
 
-export default function ChatGallica() {
+export default function ChatGallica({ onCarryToCinema, onCarryToImmersion }) {
   const [customDocs, setCustomDocs] = useState([]);
   const [activeId, setActiveId] = useState(DOCUMENTS[0].id);
   const [messages, setMessages] = useState(() =>
@@ -33,12 +33,11 @@ export default function ChatGallica() {
     const d = allDocs.find((x) => x.id === id);
     if (d?.custom) {
       // New document: start a fresh conversation with a welcome message.
-      setMessages([
-        {
-          role: "assistant",
-          text: `Document chargé depuis Gallica : « ${d.label} ».\nPosez vos questions, je m'appuierai sur le contenu OCR des premières pages.`
-        }
-      ]);
+      const isSonore = d.type === "sonore";
+      const intro = isSonore
+        ? `Extrait sonore chargé depuis Gallica : « ${d.label} ».\nPosez vos questions, je m'appuierai sur le contenu OCR des premières pages. Cet extrait peut aussi alimenter le Cinéma Historique IA ou l'Immersion Patrimoniale.`
+        : `Document chargé depuis Gallica : « ${d.label} ».\nPosez vos questions, je m'appuierai sur le contenu OCR des premières pages.`;
+      setMessages([{ role: "assistant", text: intro }]);
       setChips([]);
     } else {
       setMessages(d.conversation.map((m) => ({ ...m })));
@@ -145,6 +144,30 @@ export default function ChatGallica() {
           <div className="text-[#9CA3AF] text-[11px] font-mono truncate">
             {activeDoc?.metadata}
           </div>
+          {activeDoc?.custom && activeDoc?.type === "sonore" && (
+            <div className="mt-2 rounded-lg bg-[#00C4AA]/10 border border-[#00C4AA]/30 p-2.5">
+              <div className="text-[#00C4AA] text-[11px] uppercase tracking-widest mb-1.5">
+                Extrait sonore · propulsé depuis Gallica
+              </div>
+              <div className="text-[#9CA3AF] text-xs mb-2">
+                Cet extrait peut alimenter une restitution cinématographique ou une immersion patrimoniale.
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => onCarryToCinema?.(activeDoc)}
+                  className="rounded-lg bg-[#00C4AA] text-[#0A0D12] text-xs font-semibold px-3 py-1.5 hover:bg-[#00B099] transition-colors"
+                >
+                  L'emporter au Cinéma
+                </button>
+                <button
+                  onClick={() => onCarryToImmersion?.(activeDoc)}
+                  className="rounded-lg bg-[#111827] border border-[#00C4AA]/40 text-[#00C4AA] text-xs font-semibold px-3 py-1.5 hover:bg-[#00C4AA]/10 transition-colors"
+                >
+                  L'emporter en Immersion
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex-1 overflow-auto p-4 space-y-3 min-h-0">

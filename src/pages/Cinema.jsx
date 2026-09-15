@@ -21,12 +21,28 @@ function Typewriter({ text }) {
   );
 }
 
-export default function Cinema() {
+export default function Cinema({ carriedDoc }) {
   const [archiveId, setArchiveId] = useState(ARCHIVES[0].id);
   const archive = ARCHIVES.find((a) => a.id === archiveId);
 
   return (
     <div className="h-full flex flex-col gap-4">
+      {/* carried extract from chat */}
+      {carriedDoc && carriedDoc.target === "cinema" && (
+        <div className="rounded-xl bg-[#00C4AA]/10 border border-[#00C4AA]/40 p-4">
+          <div className="text-[#00C4AA] text-xs uppercase tracking-widest mb-1">
+            Extrait sonore apporté depuis le Chat · Gallica
+          </div>
+          <div className="text-white text-sm font-medium">{carriedDoc.label}</div>
+          <div className="text-[#9CA3AF] text-[11px] font-mono mt-0.5">
+            {carriedDoc.metadata}
+          </div>
+          <p className="text-[#9CA3AF] text-xs mt-2">
+            Prêt pour restitution cinématographique IA : l'OCR des premières pages alimentera le Gold Standard et le diaporama.
+          </p>
+        </div>
+      )}
+
       {/* selector */}
       <div className="flex items-center gap-3">
         <label className="text-[#9CA3AF] text-xs uppercase tracking-widest">Archive</label>

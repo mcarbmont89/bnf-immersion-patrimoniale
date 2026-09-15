@@ -3,7 +3,7 @@ import FloorPlan from "@/components/immersion/FloorPlan";
 import ImmersiveView from "@/components/immersion/ImmersiveView";
 import { SPACES } from "@/components/immersion/spaces";
 
-export default function ImmersionTab({ onOpenMixer }) {
+export default function ImmersionTab({ onOpenMixer, carriedDoc }) {
   const [selected, setSelected] = useState(2); // default: Tables de lecture
   const current = SPACES.find((s) => s.id === selected);
 
@@ -17,6 +17,23 @@ export default function ImmersionTab({ onOpenMixer }) {
         <div className="text-white text-sm font-medium mt-0.5">
           Salle Ovale · Richelieu
         </div>
+
+        {carriedDoc && carriedDoc.target === "immersion" && (
+          <div className="mt-3 rounded-lg bg-[#00C4AA]/10 border border-[#00C4AA]/40 p-3">
+            <div className="text-[#00C4AA] text-[10px] uppercase tracking-widest mb-1">
+              Extrait sonore apporté · Gallica
+            </div>
+            <div className="text-white text-[13px] font-medium leading-snug line-clamp-2">
+              {carriedDoc.label}
+            </div>
+            <div className="text-[#9CA3AF] text-[10px] font-mono mt-0.5 truncate">
+              {carriedDoc.metadata}
+            </div>
+            <p className="text-[#9CA3AF] text-[11px] mt-2">
+              Disponible pour l'alcôve sonore de cet espace.
+            </p>
+          </div>
+        )}
 
         <div className="mt-3 rounded-lg overflow-hidden border border-white/10">
           <FloorPlan
