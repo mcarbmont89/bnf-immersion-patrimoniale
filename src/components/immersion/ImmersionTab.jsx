@@ -3,7 +3,9 @@ import FloorPlan from "@/components/immersion/FloorPlan";
 import FloorPlanSorbonne from "@/components/immersion/FloorPlanSorbonne";
 import ImmersiveView from "@/components/immersion/ImmersiveView";
 import SpaceMaterials from "@/components/immersion/SpaceMaterials";
+import Timeline from "@/components/immersion/Timeline";
 import { SPACES, SORBONNE_SPACES } from "@/components/immersion/spaces";
+import { RICHELIEU_TIMELINE, SORBONNE_TIMELINE } from "@/components/immersion/timeline";
 
 export default function ImmersionTab({ onOpenMixer, carriedDoc }) {
   const [tour, setTour] = useState("richelieu");
@@ -13,6 +15,7 @@ export default function ImmersionTab({ onOpenMixer, carriedDoc }) {
   const materialsQuery = current
     ? `${tour === "sorbonne" ? "Sorbonne" : "Bibliothèque nationale France"} ${current.name}`
     : "";
+  const timelineEvents = (tour === "sorbonne" ? SORBONNE_TIMELINE : RICHELIEU_TIMELINE)[selected] || [];
 
   function switchTour(t) {
     if (t === tour) return;
@@ -104,6 +107,9 @@ export default function ImmersionTab({ onOpenMixer, carriedDoc }) {
           onOpenMixer={onOpenMixer}
           archiveIds={tour === "richelieu" ? [4, 6] : []}
         />
+        <div className="mt-3 shrink-0">
+          <Timeline events={timelineEvents} spaceName={current?.name} />
+        </div>
       </main>
     </div>
   );
