@@ -51,5 +51,4 @@ export const IDLE_TYPEWRITER = "Sélectionnez un fond d'archives pour activer la
 export const RAG_VALIDATION =
   "Un texte fiable, prêt à alimenter notre moteur RAG et la spatialisation sonore. C'est la qualité cible pour l'ensemble de vos fonds.";
 
-export const DIAPORAMA_BADGE =
-  "DIAPORAMA CINÉMATIQUE · PRÊT POUR GÉNÉRATION IA LOCALE";
+export const DIAPORAMA_BADGE = "DIAPORAMA CINÉMATIQUE";
