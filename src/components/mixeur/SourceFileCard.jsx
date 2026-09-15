@@ -65,9 +65,9 @@ export default function SourceFileCard({ audioMeta, separated, separating, onSep
         {separated ? (
           <><CheckIcon /> Pistes séparées</>
         ) : separating ? (
-          "Séparation IA…"
+          "Séparation…"
         ) : (
-          <><LayersIcon /> Séparer les pistes (IA)</>
+          <><LayersIcon /> Séparer les pistes</>
         )}
       </button>
     </div>

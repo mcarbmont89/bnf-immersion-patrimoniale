@@ -1,5 +1,4 @@
 import React, { useState, useRef } from "react";
-import { base44 } from "@/api/base44Client";
 import { MIX_FONDS } from "@/components/mixeur/fonds";
 import FondSelector from "@/components/mixeur/FondSelector";
 import SourceFileCard from "@/components/mixeur/SourceFileCard";
@@ -8,6 +7,7 @@ import StemTrack from "@/components/mixeur/StemTrack";
 import SpatialMap3D from "@/components/mixeur/SpatialMap3D";
 import { audioEngine } from "@/lib/audioEngine";
 import { encodeWAV } from "@/lib/wavEncoder";
+import { separateCenterChannel } from "@/lib/stemSeparator";
 
 const ARIAL = { fontFamily: "Arial, sans-serif" };
 
@@ -20,8 +20,6 @@ function MicIcon() {
     </svg>
   );
 }
-
-const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export default function Mixeur() {
   const [fondId, setFondId] = useState(MIX_FONDS[0].id);
@@ -37,6 +35,7 @@ export default function Mixeur() {
   const [downloadUrl, setDownloadUrl] = useState(null);
   const [loadError, setLoadError] = useState("");
   const [showHeadphoneBanner, setShowHeadphoneBanner] = useState(false);
+  const [notice, setNotice] = useState("");
   const fondFileRef = useRef(null);
 
   async function loadFromArrayBuffer(ab, meta, blob) {
@@ -78,56 +77,31 @@ export default function Mixeur() {
   }
 
   async function separate() {
-    if (!audioBuffer || !audioBlob) return;
+    if (!audioBuffer) return;
     setSeparating(true);
-    setSepStatus("Téléversement du fichier source…");
+    setSepStatus("Séparation par canal central…");
     setLoadError("");
+    setNotice("");
     try {
       await audioEngine.resume();
       audioEngine.clear();
-
-      // 1. Upload the source audio to public storage so Replicate can fetch it.
-      const file = new File([audioBlob], "source.wav", { type: audioBlob.type || "audio/wav" });
-      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
-
-      // 2. Create the Demucs prediction.
-      setSepStatus("Lancement de la séparation IA (Demucs)…");
-      const startRes = await base44.functions.invoke("separateStems", { audioUrl: file_url });
-      const predictionId = startRes?.data?.id;
-      if (!predictionId) throw new Error(startRes?.data?.error || "Réponse Replicate invalide");
-
-      // 3. Poll until the separation finishes.
-      let stemsOut = null;
-      for (let i = 0; i < 75; i++) {
-        await wait(4000);
-        setSepStatus(`Séparation en cours… (${i * 4}s)`);
-        const pollRes = await base44.functions.invoke("separateStems", { predictionId });
-        const st = pollRes?.data?.status;
-        if (st === "succeeded") { stemsOut = pollRes.data.stems; break; }
-        if (st === "failed" || st === "canceled") {
-          throw new Error(pollRes?.data?.error || "La séparation IA a échoué.");
-        }
-      }
-      if (!stemsOut || stemsOut.length === 0) throw new Error("Délai de séparation dépassé.");
-
-      // 4. Decode each separated stem and build the spatialized tracks.
-      setSepStatus("Décodage des pistes séparées…");
+      const { vocals, instrumental, isMono } = separateCenterChannel(audioBuffer);
+      const buffers = { vocals, instrumental };
       const built = [];
       for (const s of fond.stems) {
-        const demucs = stemsOut.find((d) => d.name === s.source) || stemsOut[built.length % stemsOut.length];
-        if (!demucs) continue;
-        const ab = await (await fetch(demucs.url)).arrayBuffer();
-        const buf = await audioEngine.loadFromArrayBuffer(ab);
+        const buf = buffers[s.source] || vocals;
         const waveform = audioEngine.computeWaveform(buf, 45);
         audioEngine.createStem(s.id, buf, s.volume);
         audioEngine.setPosition(s.id, s.az, 0, s.dist);
         built.push({ ...s, buffer: buf, waveform, playing: false });
       }
-      if (built.length === 0) throw new Error("Aucune piste séparée reçue.");
       setStems(built);
       setSeparated(true);
+      if (isMono) {
+        setNotice("Audio mono : la séparation par canal central nécessite un fichier stéréo. La piste instrumentale est silencieuse.");
+      }
     } catch (e) {
-      setLoadError("Échec de la séparation IA : " + (e.message || "erreur inconnue"));
+      setLoadError("Échec de la séparation : " + (e.message || "erreur inconnue"));
     } finally {
       setSeparating(false);
       setSepStatus("");
@@ -228,6 +202,12 @@ export default function Mixeur() {
         </div>
       )}
 
+      {notice && (
+        <div className="rounded-lg bg-[#F59E0B]/10 border border-[#F59E0B]/30 text-[#FCD34D] text-xs px-3 py-2" style={ARIAL}>
+          {notice}
+        </div>
+      )}
+
       {loadError && (
         <div className="rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs px-3 py-2" style={ARIAL}>
           {loadError}
@@ -250,7 +230,7 @@ export default function Mixeur() {
       {!separated ? (
         <div className="rounded-xl bg-[#111827] p-10 text-center text-[#9CA3AF] text-sm" style={ARIAL}>
           {audioBuffer
-            ? "Lancez la séparation IA (Demucs) pour isoler voix, ambiance et effets, puis les spatialiser."
+            ? "Lancez la séparation par canal central pour isoler la voix de l'instrumental, puis spatialisez chaque piste."
             : "Chargez un fichier audio (Gallica ou local) pour commencer la séparation des pistes."}
         </div>
       ) : (
@@ -259,7 +239,7 @@ export default function Mixeur() {
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <MicIcon />
-              <span className="text-white text-[13px] font-bold" style={ARIAL}>Séparateur de Pistes (Demucs · IA)</span>
+              <span className="text-white text-[13px] font-bold" style={ARIAL}>Séparateur de Pistes (Canal Central)</span>
             </div>
             {stems.map((s) => (
               <StemTrack
@@ -317,7 +297,7 @@ export default function Mixeur() {
 
       {/* CORS limitation info */}
       <div className="bg-[#0D1117] text-[#4B5563] text-[9px] italic px-3 py-2" style={ARIAL}>
-        Séparation IA via le modèle Demucs (Replicate). Certains enregistrements Gallica peuvent ne pas être accessibles directement depuis le navigateur en raison de restrictions CORS ; dans ce cas, importez le fichier localement.
+        Séparation par canal central (mid-side) effectuée dans le navigateur via Web Audio API, sans serveur ni clé. Fonctionne sur les fichiers stéréo ; les sources mono ne peuvent pas être séparées par cette technique. Certains enregistrements Gallica peuvent nécessiter un import local.
       </div>
     </div>
   );
