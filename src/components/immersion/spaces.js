@@ -65,10 +65,10 @@ export const SOUND_ARCHIVE = {
 };
 
 export const TABS = [
-  { id: "explorateur", label: "Explorateur", icon: "🔍" },
-  { id: "cinema", label: "Cinéma", icon: "🎬" },
-  { id: "mixeur", label: "Mixeur 3D", icon: "🎚️" },
-  { id: "studio", label: "Studio Spatialisation", icon: "🎛️" },
-  { id: "immersion", label: "Immersion Patrimoniale", icon: "🏛" },
-  { id: "chat", label: "Chat · Gallica", icon: "💬" }
+  { id: "explorateur", label: "Explorateur" },
+  { id: "cinema", label: "Cinéma" },
+  { id: "mixeur", label: "Mixeur 3D" },
+  { id: "studio", label: "Studio Spatialisation" },
+  { id: "immersion", label: "Immersion Patrimoniale" },
+  { id: "chat", label: "Chat · Gallica" }
 ];

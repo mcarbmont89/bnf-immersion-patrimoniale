@@ -29,7 +29,6 @@ export default function TabBar({ active, onChange }) {
                     : "text-[#9CA3AF] hover:text-white hover:bg-white/5"
                 }`}
               >
-                <span>{t.icon}</span>
                 <span>{t.label}</span>
                 <span className="opacity-50 ml-0.5">{i + 1}</span>
               </button>
