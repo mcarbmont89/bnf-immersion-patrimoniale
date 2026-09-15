@@ -14,8 +14,6 @@ export default function Explorateur() {
     setActiveKeyword(f.defaultKeyword);
   }
 
-  const materials = activeKeyword ? fond.keywords[activeKeyword] || [] : [];
-
   return (
     <div className="h-full flex flex-col lg:flex-row gap-4">
       {/* left: selector + transcription */}
@@ -59,7 +57,7 @@ export default function Explorateur() {
 
       {/* right: materials */}
       <div className="lg:w-1/2 rounded-xl bg-[#0D1117] border border-white/10 p-4 overflow-auto">
-        <KeywordMaterials keyword={activeKeyword} materials={materials} />
+        <KeywordMaterials keyword={activeKeyword} />
       </div>
     </div>
   );
