@@ -5,12 +5,22 @@ import { Image } from "@/components/ui/image";
 import SoundArchiveCard from "./SoundArchiveCard";
 import SpaceNavigator from "./SpaceNavigator";
 
+// "+" markers spread across the image; each zooms into its own region.
+const ZOOM_POINTS = [
+  { x: 20, y: 25 },
+  { x: 80, y: 30 },
+  { x: 50, y: 55 },
+  { x: 25, y: 78 },
+  { x: 82, y: 75 }
+];
+
 export default function ImmersiveView({ spaces, current, onSelect, onOpenMixer, archiveIds }) {
   const [cache, setCache] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [fullscreen, setFullscreen] = useState(false);
   const [zoom, setZoom] = useState(1);
+  const [zoomOrigin, setZoomOrigin] = useState("center center");
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const dragStart = useRef(null);
@@ -20,10 +30,21 @@ export default function ImmersiveView({ spaces, current, onSelect, onOpenMixer, 
   useEffect(() => {
     setZoom(1);
     setPan({ x: 0, y: 0 });
+    setZoomOrigin("center center");
   }, [current]);
 
-  function toggleZoom() {
-    setZoom((z) => (z > 1 ? 1 : 2));
+  function zoomTo(origin) {
+    if (zoom > 1 && zoomOrigin === origin) {
+      setZoom(1);
+      setPan({ x: 0, y: 0 });
+    } else {
+      setZoom(2);
+      setZoomOrigin(origin);
+      setPan({ x: 0, y: 0 });
+    }
+  }
+  function resetZoom() {
+    setZoom(1);
     setPan({ x: 0, y: 0 });
   }
   function onPointerDown(e) {
@@ -80,7 +101,7 @@ export default function ImmersiveView({ spaces, current, onSelect, onOpenMixer, 
             className="w-full h-full select-none"
             style={{
               transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-              transformOrigin: "center center",
+              transformOrigin: zoomOrigin,
               cursor: zoom > 1 ? (dragging ? "grabbing" : "grab") : "default",
               transition: dragging ? "none" : "transform 0.2s ease-out"
             }}
@@ -98,14 +119,29 @@ export default function ImmersiveView({ spaces, current, onSelect, onOpenMixer, 
           </div>
         )}
 
-        {/* zoom control on the image */}
-        {url && !loading && (
+        {/* zoom markers spread across the image */}
+        {url && !loading && zoom <= 1 && (
+          <>
+            {ZOOM_POINTS.map((p, i) => (
+              <button
+                key={i}
+                onClick={() => zoomTo(`${p.x}% ${p.y}%`)}
+                className="absolute inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#0A0D12]/70 border border-[#00C4AA]/50 text-[#00C4AA] hover:bg-[#00C4AA] hover:text-[#0A0D12] transition-colors"
+                style={{ left: `calc(${p.x}% - 16px)`, top: `calc(${p.y}% - 16px)` }}
+                title="Acercarse"
+              >
+                <Plus size={16} />
+              </button>
+            ))}
+          </>
+        )}
+        {url && !loading && zoom > 1 && (
           <button
-            onClick={toggleZoom}
+            onClick={resetZoom}
             className="absolute bottom-3 right-3 inline-flex items-center justify-center w-9 h-9 rounded-full bg-[#0A0D12]/70 border border-white/20 text-white hover:bg-[#00C4AA] hover:text-[#0A0D12] transition-colors"
-            title={zoom > 1 ? "Alejarse" : "Acercarse"}
+            title="Alejarse"
           >
-            {zoom > 1 ? <Minus size={16} /> : <Plus size={16} />}
+            <Minus size={16} />
           </button>
         )}
 
@@ -142,7 +178,7 @@ export default function ImmersiveView({ spaces, current, onSelect, onOpenMixer, 
             className="inline-flex items-center gap-1 rounded-full bg-[#00C4AA] px-3 py-1 text-xs font-semibold text-[#0A0D12] hover:bg-[#00B099] transition-colors"
           >
             {fullscreen ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
-            Vista inmersiva
+            Vue immersive
           </button>
         </div>
 
@@ -161,7 +197,7 @@ export default function ImmersiveView({ spaces, current, onSelect, onOpenMixer, 
       <div className="mt-3 shrink-0">
         <SpaceNavigator spaces={spaces} current={current} onSelect={onSelect} />
         <div className="mt-2 text-[11px] italic text-[#9CA3AF]">
-          Flechas: elige una vista · + para acercarte, arrastra para mirar · Recorrido fotográfico
+          Flèches : choisissez une vue · + pour vous rapprocher, glissez pour regarder · Parcours photographique
         </div>
       </div>
 
