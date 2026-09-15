@@ -2,6 +2,7 @@
 export const ARCHIVES = [
   {
     id: "sorbonne",
+    video: "https://media.base44.com/videos/public/6aa7513a351693c76f22216c/19de3407f_reconstruction-sorbonne.mp4",
     label: "Discours d'inauguration de la Sorbonne, 1896",
     asr:
       "de la sorbonne dans évoque le souvenir émouvant de la cérémonie coupure un quatre matins inauguré un nouveau bâtiment fais comme président du conseil municipal de bain après que les mêmes qualifié dur soulevé l'enthousiasme de l'auditoire préfet rendement vingt-quatre de l'honneur de vous à mon tour la parole de tableaux d'une incomparable rencontrer paris ont répondu de diamants pour leur éducation réputé sur la valeur de ce merveilleux laboratoire humanité les gravures va durer mais bon camarade d'olive en contact permanent dépend pas de ta bonté de but étant de d'un lointain défilé l'œuvre de cette université le début pour taper comment veut aider vous ne pouvez pas des actions quoi bon avoir les mêmes allez l'étudiante glorieuse maison dans les tempêtes leur regard vers la vie l'extérieur méritait infiniment louer modèle plus sérieux comporte dans une certaine mesure décomposition de l'année débrayable moins pour pénétrer le fabricant venez découvrir la vérité de pis-aller donc dans un compartiment nathalie dont il en perd un habitat familier j'entends par là même vous en êtes plat momentanée de faire refaire êtes-vous expérience pour le parfait seulement tu peux découvrir très bon un kilo danger de perdre la notion les enfants pendant l'œuvre dans tous les goûts littéraires de vraiment vraiment table à la communauté de atteint maman à la femme du travail contemporains il est donc nécessaire peuvent même écrit par la corde avec l'œuvre de temps qui fera la fréquemment dans le côlon general de vie nul de nous n'a le droit de te retrouver dans la béatitude parfum d'intellectuels n'est jamais dans renaissance côté de vous nous n'avons henry dans les vapes mis dans les lettres besoin d'ajouter une dans les tuyaux par l'observation de la nature des phénomènes de la vigne et des des sociétés humaines la méthode de formation donnée pour la société moderne cependant de faire mentir à nous-mêmes que nous dit qu'il est l'opep peu notre éducation nationale n'est pas encore suffisamment médias aloi travaillant au milieu à éloigner il est la nation des modes verbeux et des formules qui rappelle encore le royaume dentelée qu'une décrit par me promettre rabelais travaillant à rapporter la jeunesse de l'observation des feuilles afin de la mêlée rouler la concurrence universelle et d'affaires participer directement aux ambitions aux patients et aux intérêts du monde moderne",
@@ -13,6 +14,7 @@ export const ARCHIVES = [
   },
   {
     id: "paix",
+    video: "https://media.base44.com/videos/public/6aa7513a351693c76f22216c/f70afa180_BNFt.mp4",
     label: "Conférence de la Paix, Paris 1919",
     asr:
       "euh la conférence euh de la paix hm qui s'est tenue à versailles euh en mille neuf cent dix-neuf a réuni euh les représentants de euh vingt-sept nations...",
@@ -24,6 +26,7 @@ export const ARCHIVES = [
   },
   {
     id: "apollinaire",
+    video: "https://media.base44.com/videos/public/6aa7513a351693c76f22216c/f70afa180_BNFt.mp4",
     label: "Récital poétique, Guillaume Apollinaire 1913",
     asr:
       "sous le pont mirabeau coule la seine euh et nos amours faut-il qu'il m'en souvienne hm la joie venait toujours après la peine...",

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Play, Pause } from "lucide-react";
 import { ARCHIVES, RAG_VALIDATION, DIAPORAMA_BADGE } from "@/components/cinema/archives";
 
 function Typewriter({ text }) {
@@ -23,7 +24,25 @@ function Typewriter({ text }) {
 
 export default function Cinema({ carriedDoc }) {
   const [archiveId, setArchiveId] = useState(ARCHIVES[0].id);
+  const [playing, setPlaying] = useState(true);
+  const videoRef = useRef(null);
   const archive = ARCHIVES.find((a) => a.id === archiveId);
+
+  useEffect(() => {
+    setPlaying(true);
+  }, [archiveId]);
+
+  function togglePlay() {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.paused) {
+      v.play();
+      setPlaying(true);
+    } else {
+      v.pause();
+      setPlaying(false);
+    }
+  }
 
   return (
     <div className="h-full flex flex-col gap-4">
@@ -43,48 +62,76 @@ export default function Cinema({ carriedDoc }) {
         </div>
       )}
 
-      {/* selector */}
-      <div className="flex items-center gap-3">
-        <label className="text-[#9CA3AF] text-xs uppercase tracking-widest">Archive</label>
-        <select
-          value={archiveId}
-          onChange={(e) => setArchiveId(e.target.value)}
-          className="bg-[#111827] border border-white/10 text-white text-sm rounded-lg px-3 py-2 focus:border-[#00C4AA] outline-none"
+      {/* cinematic stage with video carousel */}
+      <div className="relative rounded-xl overflow-hidden border border-white/10 bg-[#0A0D12] aspect-video">
+        <video
+          key={archiveId}
+          ref={videoRef}
+          src={archive.video}
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0A0D12]/90 via-[#0A0D12]/20 to-[#0A0D12]/70 pointer-events-none" />
+        <div className="absolute top-3 left-3 rounded-full bg-[#00C4AA] px-3 py-1 text-[10px] font-bold tracking-wider text-[#0A0D12]">
+          {DIAPORAMA_BADGE}
+        </div>
+        <div className="absolute left-6 bottom-6 max-w-[620px]">
+          <p className="italic text-white text-2xl leading-tight mb-2">{archive.overlay}</p>
+          <Typewriter text={archive.typewriter} />
+        </div>
+        <button
+          onClick={togglePlay}
+          aria-label={playing ? "Pause" : "Lecture"}
+          className="absolute bottom-6 right-6 w-12 h-12 rounded-full border border-white/60 bg-white/10 grid place-items-center text-white hover:bg-[#00C4AA] hover:text-[#0A0D12] hover:shadow-[0_0_0_8px_rgba(0,196,170,0.2)] transition-all duration-200 active:scale-95"
         >
-          {ARCHIVES.map((a) => (
-            <option key={a.id} value={a.id}>{a.label}</option>
-          ))}
-        </select>
+          {playing ? <Pause size={18} /> : <Play size={18} />}
+        </button>
       </div>
 
+      {/* selector cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {ARCHIVES.map((a) => {
+          const active = a.id === archiveId;
+          return (
+            <button
+              key={a.id}
+              onClick={() => setArchiveId(a.id)}
+              className={`text-left rounded-xl p-4 border transition-all duration-200 ${
+                active
+                  ? "bg-[#00C4AA]/10 border-[#00C4AA] shadow-[inset_4px_0_0_0_#00C4AA]"
+                  : "bg-[#111827] border-white/10 hover:border-[#00C4AA]/50 hover:-translate-y-0.5"
+              }`}
+            >
+              <div className="text-[#00C4AA] text-[10px] font-bold uppercase tracking-widest mb-2">
+                Archive
+              </div>
+              <div className="text-white text-sm font-semibold leading-snug mb-2">
+                {a.label}
+              </div>
+              <p className="text-[#9CA3AF] text-[11px] font-mono leading-snug line-clamp-3">
+                {a.typewriter}
+              </p>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ASR + Gold cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* ASR card */}
         <div className="rounded-xl bg-[#111827] border border-white/10 p-4">
           <div className="text-[#9CA3AF] text-xs uppercase tracking-widest mb-2">
             Archive brute (ASR)
           </div>
           <p className="text-white/70 text-sm font-mono leading-relaxed line-clamp-4">{archive.asr}</p>
         </div>
-        {/* Gold standard card */}
         <div className="rounded-xl bg-[#111827] border border-[#00C4AA]/40 p-4">
           <div className="text-[#00C4AA] text-xs uppercase tracking-widest mb-2">
             Restitution IA · Gold Standard
           </div>
           <p className="text-white text-sm leading-relaxed line-clamp-4">{archive.gold}</p>
-        </div>
-      </div>
-
-      {/* cinematic stage */}
-      <div className="relative rounded-xl overflow-hidden border border-white/10 bg-gradient-to-b from-[#1a1410] to-[#0A0D12] aspect-video flex flex-col items-center justify-center">
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,_#3a2a1a,_transparent_70%)]" />
-        <div className="relative text-center px-6">
-          <p className="italic text-white/90 text-xl line-clamp-4">{archive.overlay}</p>
-        </div>
-        <div className="absolute bottom-4 left-0 right-0 px-6 text-center">
-          <Typewriter text={archive.typewriter} />
-        </div>
-        <div className="absolute top-3 left-3 rounded-full bg-[#00C4AA] px-3 py-1 text-[10px] font-bold tracking-wider text-[#0A0D12]">
-          {DIAPORAMA_BADGE}
         </div>
       </div>
 
