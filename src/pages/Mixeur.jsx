@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { base44 } from "@/api/base44Client";
 import { MIX_FONDS } from "@/components/mixeur/fonds";
 import FondSelector from "@/components/mixeur/FondSelector";
 import SourceFileCard from "@/components/mixeur/SourceFileCard";
@@ -20,13 +21,17 @@ function MicIcon() {
   );
 }
 
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
 export default function Mixeur() {
   const [fondId, setFondId] = useState(MIX_FONDS[0].id);
   const fond = MIX_FONDS.find((f) => f.id === fondId);
   const [audioBuffer, setAudioBuffer] = useState(null);
+  const [audioBlob, setAudioBlob] = useState(null);
   const [audioMeta, setAudioMeta] = useState(null);
   const [separated, setSeparated] = useState(false);
   const [separating, setSeparating] = useState(false);
+  const [sepStatus, setSepStatus] = useState("");
   const [stems, setStems] = useState([]);
   const [mixing, setMixing] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState(null);
@@ -34,11 +39,12 @@ export default function Mixeur() {
   const [showHeadphoneBanner, setShowHeadphoneBanner] = useState(false);
   const fondFileRef = useRef(null);
 
-  async function loadFromArrayBuffer(ab, meta) {
+  async function loadFromArrayBuffer(ab, meta, blob) {
     try {
       setLoadError("");
       const buf = await audioEngine.loadFromArrayBuffer(ab);
       setAudioBuffer(buf);
+      setAudioBlob(blob || new Blob([ab]));
       setAudioMeta(meta);
       setSeparated(false);
       setStems([]);
@@ -51,7 +57,7 @@ export default function Mixeur() {
 
   async function loadFromFile(file, meta) {
     const ab = await file.arrayBuffer();
-    await loadFromArrayBuffer(ab, meta);
+    await loadFromArrayBuffer(ab, meta, file);
   }
 
   function selectFond(id) {
@@ -72,25 +78,59 @@ export default function Mixeur() {
   }
 
   async function separate() {
-    if (!audioBuffer) return;
+    if (!audioBuffer || !audioBlob) return;
     setSeparating(true);
+    setSepStatus("Téléversement du fichier source…");
+    setLoadError("");
     try {
       await audioEngine.resume();
       audioEngine.clear();
+
+      // 1. Upload the source audio to public storage so Replicate can fetch it.
+      const file = new File([audioBlob], "source.wav", { type: audioBlob.type || "audio/wav" });
+      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
+
+      // 2. Create the Demucs prediction.
+      setSepStatus("Lancement de la séparation IA (Demucs)…");
+      const startRes = await base44.functions.invoke("separateStems", { audioUrl: file_url });
+      const predictionId = startRes?.data?.id;
+      if (!predictionId) throw new Error(startRes?.data?.error || "Réponse Replicate invalide");
+
+      // 3. Poll until the separation finishes.
+      let stemsOut = null;
+      for (let i = 0; i < 75; i++) {
+        await wait(4000);
+        setSepStatus(`Séparation en cours… (${i * 4}s)`);
+        const pollRes = await base44.functions.invoke("separateStems", { predictionId });
+        const st = pollRes?.data?.status;
+        if (st === "succeeded") { stemsOut = pollRes.data.stems; break; }
+        if (st === "failed" || st === "canceled") {
+          throw new Error(pollRes?.data?.error || "La séparation IA a échoué.");
+        }
+      }
+      if (!stemsOut || stemsOut.length === 0) throw new Error("Délai de séparation dépassé.");
+
+      // 4. Decode each separated stem and build the spatialized tracks.
+      setSepStatus("Décodage des pistes séparées…");
       const built = [];
       for (const s of fond.stems) {
-        const filtered = await audioEngine.renderFilteredBuffer(audioBuffer, s.filterType, s.filterFreq);
-        const waveform = audioEngine.computeWaveform(filtered, 45);
-        audioEngine.createStem(s.id, audioBuffer, s.filterType, s.filterFreq, s.volume);
+        const demucs = stemsOut.find((d) => d.name === s.source) || stemsOut[built.length % stemsOut.length];
+        if (!demucs) continue;
+        const ab = await (await fetch(demucs.url)).arrayBuffer();
+        const buf = await audioEngine.loadFromArrayBuffer(ab);
+        const waveform = audioEngine.computeWaveform(buf, 45);
+        audioEngine.createStem(s.id, buf, s.volume);
         audioEngine.setPosition(s.id, s.az, 0, s.dist);
-        built.push({ ...s, waveform, playing: false });
+        built.push({ ...s, buffer: buf, waveform, playing: false });
       }
+      if (built.length === 0) throw new Error("Aucune piste séparée reçue.");
       setStems(built);
       setSeparated(true);
     } catch (e) {
-      setLoadError("Échec de la séparation des pistes.");
+      setLoadError("Échec de la séparation IA : " + (e.message || "erreur inconnue"));
     } finally {
       setSeparating(false);
+      setSepStatus("");
     }
   }
 
@@ -131,21 +171,17 @@ export default function Mixeur() {
   }
 
   async function exportMix() {
-    if (!audioBuffer) return;
+    if (stems.length === 0) return;
     setMixing(true);
     setDownloadUrl(null);
     try {
-      const rendered = await audioEngine.renderMix(
-        audioBuffer,
-        stems.map((s) => ({
-          filterType: s.filterType,
-          filterFreq: s.filterFreq,
-          az: s.az,
-          dist: s.dist,
-          volume: s.volume
-        })),
-        audioBuffer.duration
-      );
+      const stemsConfig = stems.map((s) => ({
+        buffer: s.buffer,
+        az: s.az,
+        dist: s.dist,
+        volume: s.volume
+      }));
+      const rendered = await audioEngine.renderMix(stemsConfig, stemsConfig[0].buffer.duration);
       const blob = encodeWAV(rendered);
       setDownloadUrl(URL.createObjectURL(blob));
     } catch (e) {
@@ -186,6 +222,12 @@ export default function Mixeur() {
       {/* source file card */}
       <SourceFileCard audioMeta={audioMeta} separated={separated} separating={separating} onSeparate={separate} />
 
+      {separating && sepStatus && (
+        <div className="rounded-lg bg-[#00C4AA]/10 border border-[#00C4AA]/30 text-[#00C4AA] text-xs px-3 py-2" style={ARIAL}>
+          {sepStatus}
+        </div>
+      )}
+
       {loadError && (
         <div className="rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs px-3 py-2" style={ARIAL}>
           {loadError}
@@ -208,7 +250,7 @@ export default function Mixeur() {
       {!separated ? (
         <div className="rounded-xl bg-[#111827] p-10 text-center text-[#9CA3AF] text-sm" style={ARIAL}>
           {audioBuffer
-            ? "Lancez la séparation pour visualiser et spatialiser les pistes extraites de cette oeuvre."
+            ? "Lancez la séparation IA (Demucs) pour isoler voix, ambiance et effets, puis les spatialiser."
             : "Chargez un fichier audio (Gallica ou local) pour commencer la séparation des pistes."}
         </div>
       ) : (
@@ -217,7 +259,7 @@ export default function Mixeur() {
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <MicIcon />
-              <span className="text-white text-[13px] font-bold" style={ARIAL}>Séparateur de Pistes (Stem Splitter)</span>
+              <span className="text-white text-[13px] font-bold" style={ARIAL}>Séparateur de Pistes (Demucs · IA)</span>
             </div>
             {stems.map((s) => (
               <StemTrack
@@ -275,7 +317,7 @@ export default function Mixeur() {
 
       {/* CORS limitation info */}
       <div className="bg-[#0D1117] text-[#4B5563] text-[9px] italic px-3 py-2" style={ARIAL}>
-        Certains enregistrements Gallica peuvent ne pas être accessibles directement depuis le navigateur en raison de restrictions CORS. Dans ce cas, importez le fichier localement.
+        Séparation IA via le modèle Demucs (Replicate). Certains enregistrements Gallica peuvent ne pas être accessibles directement depuis le navigateur en raison de restrictions CORS ; dans ce cas, importez le fichier localement.
       </div>
     </div>
   );

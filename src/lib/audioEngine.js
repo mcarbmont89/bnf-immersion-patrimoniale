@@ -1,4 +1,5 @@
 // Real Web Audio API HRTF binaural engine for the Mixeur 3D tab.
+// Each stem now plays its OWN separated AudioBuffer (Demucs output) — no EQ filter.
 // Singleton imported across components. AudioContext is created lazily
 // on the first user gesture (browser autoplay policy).
 
@@ -38,7 +39,7 @@ export function sphericalToCartesian(azDeg, elDeg, dist) {
 class AudioEngine {
   constructor() {
     this.ctx = null;
-    this.stems = new Map(); // trackId -> { buffer, filter, panner, gain, source, playing }
+    this.stems = new Map(); // trackId -> { buffer, panner, gain, inputNode, source, playing }
   }
 
   ensureContext() {
@@ -61,22 +62,6 @@ class AudioEngine {
     return await ctx.decodeAudioData(arrayBuffer.slice(0));
   }
 
-  // Render a filtered copy of the buffer offline (used for waveform display).
-  async renderFilteredBuffer(buffer, filterType, freq) {
-    const OfflineCtor = window.OfflineAudioContext || window.webkitOfflineAudioContext;
-    const offline = new OfflineCtor(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
-    const src = offline.createBufferSource();
-    src.buffer = buffer;
-    const filter = offline.createBiquadFilter();
-    filter.type = filterType;
-    filter.frequency.value = freq;
-    filter.Q.value = 0.7;
-    src.connect(filter);
-    filter.connect(offline.destination);
-    src.start(0);
-    return await offline.startRendering();
-  }
-
   // 45 peak-amplitude bars normalized 0..1 from a buffer's first channel.
   computeWaveform(buffer, bars = 45) {
     const ch = buffer.getChannelData(0);
@@ -95,21 +80,27 @@ class AudioEngine {
     return out.map((v) => Math.max(0.06, Math.min(1, v / max)));
   }
 
-  // Create a persistent stem graph: source -> filter -> HRTF panner -> gain -> out.
-  // The buffer is the ORIGINAL audio; the live BiquadFilter performs the separation.
-  createStem(trackId, buffer, filterType, filterFreq, volume) {
+  // Create a persistent stem graph: source -> [filter?] -> HRTF panner -> gain -> out.
+  // filterType is optional; when omitted the stem plays its raw separated buffer.
+  createStem(trackId, buffer, volume, filterType, filterFreq) {
     const ctx = this.ensureContext();
-    const filter = ctx.createBiquadFilter();
-    filter.type = filterType;
-    filter.frequency.value = filterFreq;
-    filter.Q.value = 0.7;
     const panner = makePanner(ctx);
     const gain = ctx.createGain();
     gain.gain.value = (volume ?? 80) / 100;
-    filter.connect(panner);
+    let inputNode;
+    if (filterType) {
+      const filter = ctx.createBiquadFilter();
+      filter.type = filterType;
+      filter.frequency.value = filterFreq ?? 1000;
+      filter.Q.value = 0.7;
+      filter.connect(panner);
+      inputNode = filter;
+    } else {
+      inputNode = panner;
+    }
     panner.connect(gain);
     gain.connect(ctx.destination);
-    this.stems.set(trackId, { buffer, filter, panner, gain, source: null, playing: false });
+    this.stems.set(trackId, { buffer, panner, gain, inputNode, source: null, playing: false });
     return this.stems.get(trackId);
   }
 
@@ -134,7 +125,7 @@ class AudioEngine {
     const src = ctx.createBufferSource();
     src.buffer = n.buffer;
     src.loop = true;
-    src.connect(n.filter);
+    src.connect(n.inputNode);
     src.start(0);
     n.source = src;
     n.playing = true;
@@ -166,27 +157,31 @@ class AudioEngine {
     this.stems.clear();
   }
 
-  // Render the full binaural mix offline for WAV export.
-  async renderMix(audioBuffer, stemsConfig, durationSec) {
-    const sampleRate = audioBuffer.sampleRate;
-    const length = Math.ceil(Math.min(durationSec, audioBuffer.duration) * sampleRate);
+  // Render the full binaural mix offline for WAV export. Each stem uses its own buffer.
+  async renderMix(stemsConfig, durationSec) {
+    const sampleRate = stemsConfig[0].buffer.sampleRate;
+    const length = Math.ceil(Math.min(durationSec, stemsConfig[0].buffer.duration) * sampleRate);
     const OfflineCtor = window.OfflineAudioContext || window.webkitOfflineAudioContext;
     const offline = new OfflineCtor(2, length, sampleRate);
     for (const s of stemsConfig) {
       const src = offline.createBufferSource();
-      src.buffer = audioBuffer;
+      src.buffer = s.buffer;
       src.loop = true;
-      const filter = offline.createBiquadFilter();
-      filter.type = s.filterType;
-      filter.frequency.value = s.filterFreq;
-      filter.Q.value = 0.7;
+      let node = src;
+      if (s.filterType) {
+        const filter = offline.createBiquadFilter();
+        filter.type = s.filterType;
+        filter.frequency.value = s.filterFreq;
+        filter.Q.value = 0.7;
+        src.connect(filter);
+        node = filter;
+      }
       const panner = makePanner(offline);
       const gain = offline.createGain();
       gain.gain.value = (s.volume ?? 80) / 100;
       const { x, y, z } = sphericalToCartesian(s.az, 0, s.dist);
       setPannerPosition(panner, x, y, z, 0);
-      src.connect(filter);
-      filter.connect(panner);
+      node.connect(panner);
       panner.connect(gain);
       gain.connect(offline.destination);
       src.start(0);
