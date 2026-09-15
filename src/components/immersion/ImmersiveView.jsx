@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { Maximize2, Minimize2, Plus, Minus } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import SoundArchiveCard from "./SoundArchiveCard";
@@ -10,7 +10,34 @@ export default function ImmersiveView({ spaces, current, onSelect, onOpenMixer, 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [fullscreen, setFullscreen] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+  const dragStart = useRef(null);
   const reqIdRef = useRef(0);
+
+  // Reset zoom/pan when the selected space changes.
+  useEffect(() => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }, [current]);
+
+  function toggleZoom() {
+    setZoom((z) => (z > 1 ? 1 : 2));
+    setPan({ x: 0, y: 0 });
+  }
+  function onPointerDown(e) {
+    if (zoom <= 1) return;
+    setDragging(true);
+    dragStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
+  }
+  function onPointerMove(e) {
+    if (!dragging) return;
+    setPan({ x: e.clientX - dragStart.current.x, y: e.clientY - dragStart.current.y });
+  }
+  function onPointerUp() {
+    setDragging(false);
+  }
 
   const space = spaces.find((s) => s.id === current);
   const total = spaces.length;
@@ -49,12 +76,37 @@ export default function ImmersiveView({ spaces, current, onSelect, onOpenMixer, 
       {/* image area */}
       <div className="relative flex-1 min-h-0 overflow-hidden rounded-xl bg-[#0D1117]">
         {url && !loading && (
-          <Image
-            src={url}
-            alt={space?.name}
-            className="w-full h-full"
-            fittingType="fill"
-          />
+          <div
+            className="w-full h-full select-none"
+            style={{
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+              transformOrigin: "center center",
+              cursor: zoom > 1 ? (dragging ? "grabbing" : "grab") : "default",
+              transition: dragging ? "none" : "transform 0.2s ease-out"
+            }}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerLeave={onPointerUp}
+          >
+            <Image
+              src={url}
+              alt={space?.name}
+              className="w-full h-full pointer-events-none"
+              fittingType="fill"
+            />
+          </div>
+        )}
+
+        {/* zoom control on the image */}
+        {url && !loading && (
+          <button
+            onClick={toggleZoom}
+            className="absolute bottom-3 right-3 inline-flex items-center justify-center w-9 h-9 rounded-full bg-[#0A0D12]/70 border border-white/20 text-white hover:bg-[#00C4AA] hover:text-[#0A0D12] transition-colors"
+            title={zoom > 1 ? "Alejarse" : "Acercarse"}
+          >
+            {zoom > 1 ? <Minus size={16} /> : <Plus size={16} />}
+          </button>
         )}
 
         {/* loading overlay */}
