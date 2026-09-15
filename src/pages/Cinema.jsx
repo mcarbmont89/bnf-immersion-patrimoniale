@@ -63,14 +63,14 @@ export default function Cinema({ carriedDoc }) {
           <div className="text-[#9CA3AF] text-xs uppercase tracking-widest mb-2">
             Archive brute (ASR)
           </div>
-          <p className="text-white/70 text-sm font-mono leading-relaxed">{archive.asr}</p>
+          <p className="text-white/70 text-sm font-mono leading-relaxed line-clamp-4">{archive.asr}</p>
         </div>
         {/* Gold standard card */}
         <div className="rounded-xl bg-[#111827] border border-[#00C4AA]/40 p-4">
           <div className="text-[#00C4AA] text-xs uppercase tracking-widest mb-2">
             Restitution IA · Gold Standard
           </div>
-          <p className="text-white text-sm leading-relaxed">{archive.gold}</p>
+          <p className="text-white text-sm leading-relaxed line-clamp-4">{archive.gold}</p>
         </div>
       </div>
 
@@ -78,7 +78,7 @@ export default function Cinema({ carriedDoc }) {
       <div className="relative rounded-xl overflow-hidden border border-white/10 bg-gradient-to-b from-[#1a1410] to-[#0A0D12] aspect-video flex flex-col items-center justify-center">
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,_#3a2a1a,_transparent_70%)]" />
         <div className="relative text-center px-6">
-          <p className="italic text-white/90 text-xl">{archive.overlay}</p>
+          <p className="italic text-white/90 text-xl line-clamp-4">{archive.overlay}</p>
         </div>
         <div className="absolute bottom-4 left-0 right-0 px-6 text-center">
           <Typewriter text={archive.typewriter} />
