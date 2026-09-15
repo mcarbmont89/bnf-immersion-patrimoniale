@@ -3,9 +3,9 @@
 
 export const RICHELIEU_TIMELINE = {
   1: [
-    { year: 1868, title: "Début des travaux du site Richelieu", description: "Lancement de la construction du quadrilatère Richelieu par l'architecte Henri Labrouste." },
-    { year: 1875, title: "Ouverture au public", description: "Le site Richelieu ouvre ses portes aux lecteurs de la Bibliothèque impériale." },
-    { year: 1934, title: "Incendie de la Salle des périodiques", description: "Un incendie endommage une partie des collections; relance des projets de modernisation." }
+    { year: 1854, title: "Labrouste architecte de la Bibliothèque", description: "Henri Labrouste est nommé architecte de la Bibliothèque impériale et entreprend le quadrilatère Richelieu (catalogue d'exposition BnF 1953)." },
+    { year: 1868, title: "Ouverture de la salle de lecture Labrouste", description: "La salle de lecture à structure métallique conçue par Labrouste ouvre aux lecteurs de la Bibliothèque impériale." },
+    { year: 1936, title: "Ouverture de la Salle Ovale", description: "La Salle Ovale, conçue par l'architecte Michel-Roux Spitz sur les plans du quadrilatère Richelieu, ouvre au public." }
   ],
   2: [
     { year: 1868, title: "Conception des tables de lecture", description: "Henri Labrouste dessine les longues tables de lecture en chêne pour les chercheurs." },
@@ -47,12 +47,12 @@ export const RICHELIEU_TIMELINE = {
 export const SORBONNE_TIMELINE = {
   1: [
     { year: 1257, title: "Fondation de la Sorbonne", description: "Robert de Sorbon fonde le collège de théologie qui deviendra la Sorbonne." },
-    { year: 1885, title: "Reconstruction de la cour d'honneur", description: "Reconstruction du bâtiment principal par l'architecte Henri-Paul Nénot." },
-    { year: 1906, title: "Inauguration officielle", description: "Inauguration de la nouvelle Sorbonne par le président Émile Loubet." }
+    { year: 1884, title: "Reconstruction de la cour d'honneur", description: "Reconstruction du bâtiment principal par l'architecte Henri-Paul Nénot." },
+    { year: 1889, title: "Inauguration de la nouvelle Sorbonne", description: "Inauguration de la nouvelle Sorbonne par le président Sadi Carnot (Bonnerot, La Sorbonne, 1927)." }
   ],
   2: [
     { year: 1889, title: "Grand amphithéâtre", description: "Achèvement du grand amphithéâtre pour les cours magistraux solennels." },
-    { year: 1896, title: "Discours d'inauguration", description: "Le discours d'inauguration de la nouvelle Sorbonne y est prononcé." },
+    { year: 1889, title: "Discours d'inauguration", description: "Le discours d'inauguration de la nouvelle Sorbonne y est prononcé par Sadi Carnot." },
     { year: 1968, title: "Mai 68", description: "Le grand amphithéâtre devient un lieu de débats lors des événements de Mai 68." }
   ],
   3: [
@@ -67,7 +67,7 @@ export const SORBONNE_TIMELINE = {
   ],
   5: [
     { year: 1885, title: "Escalier d'honneur", description: "Construction du monumental escalier d'honneur par Henri-Paul Nénot." },
-    { year: 1906, title: "Inauguration", description: "L'escalier d'honneur est inauguré avec le nouveau bâtiment." },
+    { year: 1889, title: "Inauguration", description: "L'escalier d'honneur est inauguré avec le nouveau bâtiment de la Sorbonne." },
     { year: 1995, title: "Restauration de la rampe", description: "Restauration de la rampe en fer forgé et des balustrades." }
   ],
   6: [
@@ -76,7 +76,7 @@ export const SORBONNE_TIMELINE = {
     { year: 2008, title: "Rénovation", description: "Rénovation des boiseries et des portraits de la salle." }
   ],
   7: [
-    { year: 1906, title: "Galerie des bustes", description: "Installation de la galerie de bustes de savants français." },
+    { year: 1889, title: "Galerie des bustes", description: "Installation de la galerie de bustes de savants français dans la nouvelle Sorbonne." },
     { year: 1955, title: "Enrichissement", description: "Ajout de nouveaux bustes d'intellectuels du XXe siècle." },
     { year: 2015, title: "Restauration des marbres", description: "Campagne de restauration des bustes en marbre." }
   ],
