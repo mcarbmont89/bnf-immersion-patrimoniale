@@ -26,7 +26,7 @@ export const ARCHIVES = [
   },
   {
     id: "apollinaire",
-    video: "https://media.base44.com/videos/public/6aa7513a351693c76f22216c/f70afa180_BNFt.mp4",
+    video: "https://media.base44.com/videos/public/6aa7513a351693c76f22216c/6ad7f76ad_apollinaire.mp4",
     label: "Récital poétique, Guillaume Apollinaire 1913",
     asr:
       "sous le pont mirabeau coule la seine euh et nos amours faut-il qu'il m'en souvienne hm la joie venait toujours après la peine...",
