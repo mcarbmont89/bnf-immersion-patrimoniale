@@ -48,17 +48,11 @@ export default function SearchPanel({ onAdd }) {
 
   return (
     <div className="rounded-xl bg-[#0D1117] border border-white/10 p-3">
-      <form onSubmit={search} className="flex gap-2">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Rechercher dans Gallica…"
-          className="flex-1 bg-[#111827] border border-white/10 text-white text-sm rounded-lg px-3 py-2 focus:border-[#00C4AA] outline-none"
-        />
+      <div className="mb-2">
         <select
           value={type}
           onChange={(e) => setType(e.target.value)}
-          className="bg-[#111827] border border-white/10 text-[#9CA3AF] text-sm rounded-lg px-2 py-2 focus:border-[#00C4AA] outline-none"
+          className="w-full bg-[#111827] border border-white/10 text-[#9CA3AF] text-xs rounded-lg px-2 py-1.5 focus:border-[#00C4AA] outline-none"
         >
           <option value="">Tous types</option>
           <option value="monographie">Monographie</option>
@@ -69,10 +63,18 @@ export default function SearchPanel({ onAdd }) {
           <option value="partition">Partition</option>
           <option value="fascicule">Périodique</option>
         </select>
+      </div>
+      <form onSubmit={search} className="flex gap-2">
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Rechercher dans Gallica…"
+          className="w-40 bg-[#111827] border border-white/10 text-white text-sm rounded-lg px-3 py-1.5 focus:border-[#00C4AA] outline-none"
+        />
         <button
           type="submit"
           disabled={loading || !query.trim()}
-          className="rounded-lg bg-[#00C4AA] text-[#0A0D12] text-sm font-semibold px-4 py-2 hover:bg-[#00B099] transition-colors disabled:opacity-50"
+          className="rounded-lg bg-[#00C4AA] text-[#0A0D12] text-sm font-semibold px-3 py-1.5 hover:bg-[#00B099] transition-colors disabled:opacity-50"
         >
           {loading ? "…" : "OK"}
         </button>
