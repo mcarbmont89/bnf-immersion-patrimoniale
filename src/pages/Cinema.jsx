@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Play, Pause } from "lucide-react";
-import { ARCHIVES, RAG_VALIDATION, DIAPORAMA_BADGE } from "@/components/cinema/archives";
+import {
+  ARCHIVES,
+  AMBIENT_VIDEOS,
+  IDLE_OVERLAY,
+  IDLE_TYPEWRITER,
+  RAG_VALIDATION,
+  DIAPORAMA_BADGE
+} from "@/components/cinema/archives";
 
 function Typewriter({ text }) {
   const [n, setN] = useState(0);
@@ -23,9 +30,12 @@ function Typewriter({ text }) {
 }
 
 export default function Cinema({ carriedDoc }) {
-  const [archiveId, setArchiveId] = useState(ARCHIVES[0].id);
+  // null = idle ambient loop; otherwise the selected fond id
+  const [archiveId, setArchiveId] = useState(null);
   const [playing, setPlaying] = useState(true);
+  const [cycleDone, setCycleDone] = useState(false);
   const videoRef = useRef(null);
+
   const archive = ARCHIVES.find((a) => a.id === archiveId);
 
   useEffect(() => {
@@ -42,6 +52,11 @@ export default function Cinema({ carriedDoc }) {
       v.pause();
       setPlaying(false);
     }
+  }
+
+  function selectArchive(id) {
+    if (!cycleDone) return;
+    setArchiveId(id);
   }
 
   return (
@@ -64,23 +79,35 @@ export default function Cinema({ carriedDoc }) {
 
       {/* cinematic stage with video carousel */}
       <div className="relative rounded-xl overflow-hidden border border-white/10 bg-[#0A0D12] aspect-video">
-        <video
-          key={archiveId}
-          ref={videoRef}
-          src={archive.video}
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        {archive ? (
+          <video
+            key={archiveId}
+            ref={videoRef}
+            src={archive.video}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+            onClick={togglePlay}
+          />
+        ) : (
+          <AmbientLoop
+            videoRef={videoRef}
+            onCycleDone={() => setCycleDone(true)}
+            playing={playing}
+            onToggle={togglePlay}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-r from-[#0A0D12]/90 via-[#0A0D12]/20 to-[#0A0D12]/70 pointer-events-none" />
         <div className="absolute top-3 left-3 rounded-full bg-[#00C4AA] px-3 py-1 text-[10px] font-bold tracking-wider text-[#0A0D12]">
           {DIAPORAMA_BADGE}
         </div>
         <div className="absolute left-6 bottom-6 max-w-[620px]">
-          <p className="italic text-white text-2xl leading-tight mb-2">{archive.overlay}</p>
-          <Typewriter text={archive.typewriter} />
+          <p className="italic text-white text-2xl leading-tight mb-2">
+            {archive ? archive.overlay : IDLE_OVERLAY}
+          </p>
+          <Typewriter text={archive ? archive.typewriter : IDLE_TYPEWRITER} />
         </div>
         <button
           onClick={togglePlay}
@@ -95,14 +122,18 @@ export default function Cinema({ carriedDoc }) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {ARCHIVES.map((a) => {
           const active = a.id === archiveId;
+          const disabled = !archive && !cycleDone;
           return (
             <button
               key={a.id}
-              onClick={() => setArchiveId(a.id)}
+              onClick={() => selectArchive(a.id)}
+              disabled={disabled}
               className={`text-left rounded-xl p-4 border transition-all duration-200 ${
                 active
                   ? "bg-[#00C4AA]/10 border-[#00C4AA] shadow-[inset_4px_0_0_0_#00C4AA]"
-                  : "bg-[#111827] border-white/10 hover:border-[#00C4AA]/50 hover:-translate-y-0.5"
+                  : disabled
+                    ? "bg-[#111827] border-white/10 opacity-40 cursor-not-allowed"
+                    : "bg-[#111827] border-white/10 hover:border-[#00C4AA]/50 hover:-translate-y-0.5"
               }`}
             >
               <div className="text-[#00C4AA] text-[10px] font-bold uppercase tracking-widest mb-2">
@@ -125,22 +156,66 @@ export default function Cinema({ carriedDoc }) {
           <div className="text-[#9CA3AF] text-xs uppercase tracking-widest mb-2">
             Archive brute (ASR)
           </div>
-          <p className="text-white/70 text-sm font-mono leading-relaxed line-clamp-4">{archive.asr}</p>
+          <p className="text-white/70 text-sm font-mono leading-relaxed line-clamp-4">
+            {archive ? archive.asr : "—"}
+          </p>
         </div>
         <div className="rounded-xl bg-[#111827] border border-[#00C4AA]/40 p-4">
           <div className="text-[#00C4AA] text-xs uppercase tracking-widest mb-2">
             Restitution IA · Gold Standard
           </div>
-          <p className="text-white text-sm leading-relaxed line-clamp-4">{archive.gold}</p>
+          <p className="text-white text-sm leading-relaxed line-clamp-4">
+            {archive ? archive.gold : "Sélectionnez un fond d'archives pour révéler la restitution IA."}
+          </p>
         </div>
       </div>
 
       {/* RAG validation */}
       <div className="rounded-xl bg-[#0d2a25] border border-[#00C4AA]/50 p-4">
-        <p className="text-[#00C4AA] text-sm">
-          {RAG_VALIDATION}
-        </p>
+        <p className="text-[#00C4AA] text-sm">{RAG_VALIDATION}</p>
       </div>
     </div>
+  );
+}
+
+// Plays the ambient videos in sequence; once one full cycle completes,
+// calls onCycleDone so the fond buttons become selectable.
+function AmbientLoop({ videoRef, onCycleDone, playing, onToggle }) {
+  const [idx, setIdx] = useState(0);
+  const completedRef = useRef(false);
+
+  function handleEnded() {
+    const next = idx + 1;
+    if (next >= AMBIENT_VIDEOS.length) {
+      // one full cycle done
+      if (!completedRef.current) {
+        completedRef.current = true;
+        onCycleDone();
+      }
+      setIdx(0); // keep looping
+    } else {
+      setIdx(next);
+    }
+  }
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (playing) v.play().catch(() => {});
+    else v.pause();
+  }, [playing, idx]);
+
+  return (
+    <video
+      ref={videoRef}
+      key={idx}
+      src={AMBIENT_VIDEOS[idx]}
+      autoPlay
+      muted
+      playsInline
+      className="absolute inset-0 w-full h-full object-cover"
+      onEnded={handleEnded}
+      onClick={onToggle}
+    />
   );
 }

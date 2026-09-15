@@ -38,6 +38,16 @@ export const ARCHIVES = [
   }
 ];
 
+// Ambient videos for the idle carousel loop (no fond selected).
+export const AMBIENT_VIDEOS = [
+  "https://media.base44.com/videos/public/6aa7513a351693c76f22216c/f70afa180_BNFt.mp4",
+  "https://media.base44.com/videos/public/6aa7513a351693c76f22216c/b927d388e_bnfsonore.mp4",
+  "https://media.base44.com/videos/public/6aa7513a351693c76f22216c/3138adb9a_bnf_sonore.mp4"
+];
+
+export const IDLE_OVERLAY = "Bibliothèque nationale de France · Archives sonores";
+export const IDLE_TYPEWRITER = "Sélectionnez un fond d'archives pour activer la restitution cinématographique IA.";
+
 export const RAG_VALIDATION =
   "Un texte fiable, prêt à alimenter notre moteur RAG et la spatialisation sonore. C'est la qualité cible pour l'ensemble de vos fonds.";
 
