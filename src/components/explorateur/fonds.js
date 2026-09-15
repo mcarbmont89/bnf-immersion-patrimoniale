@@ -102,48 +102,4 @@ export const FONDS = [
       ]
     }
   },
-  {
-    id: "AP_000126",
-    title: "Fragmentos Sonoros",
-    subtitle: "Essais Vocaux et Mots Isolés",
-    duration: "00:32",
-    source: "AP_000126_(REST1)_V1_1_A.wav",
-    defaultKeyword: "mémoire",
-    transcription:
-      "[Lumière]... [silence]... ah... [mémoire]... [voix]... encore... [temps]... là... [parole]... [écho]... [présence]...",
-    keywords: {
-      Lumière: [
-        { title: "Archives phonographiques de la Bibliothèque nationale, 1911", score: 91, type: "CATALOGUE", source: "BnF-Sons-Archives" },
-        { title: "Cylindres de cire, inventaire des enregistrements expérimentaux", score: 86, type: "INVENTAIRE", source: "BnF-Sons-Cylindres" }
-      ],
-      silence: [
-        { title: "Archives phonographiques de la Bibliothèque nationale, 1911", score: 91, type: "CATALOGUE", source: "BnF-Sons-Archives" },
-        { title: "Cylindres de cire, inventaire des enregistrements expérimentaux", score: 86, type: "INVENTAIRE", source: "BnF-Sons-Cylindres" }
-      ],
-      mémoire: [
-        { title: "Archives phonographiques de la Bibliothèque nationale, 1911", score: 91, type: "CATALOGUE", source: "BnF-Sons-Archives" },
-        { title: "Cylindres de cire, inventaire des enregistrements expérimentaux", score: 86, type: "INVENTAIRE", source: "BnF-Sons-Cylindres" }
-      ],
-      voix: [
-        { title: "Archives phonographiques de la Bibliothèque nationale, 1911", score: 91, type: "CATALOGUE", source: "BnF-Sons-Archives" },
-        { title: "Cylindres de cire, inventaire des enregistrements expérimentaux", score: 86, type: "INVENTAIRE", source: "BnF-Sons-Cylindres" }
-      ],
-      temps: [
-        { title: "Archives phonographiques de la Bibliothèque nationale, 1911", score: 91, type: "CATALOGUE", source: "BnF-Sons-Archives" },
-        { title: "Cylindres de cire, inventaire des enregistrements expérimentaux", score: 86, type: "INVENTAIRE", source: "BnF-Sons-Cylindres" }
-      ],
-      parole: [
-        { title: "Archives phonographiques de la Bibliothèque nationale, 1911", score: 91, type: "CATALOGUE", source: "BnF-Sons-Archives" },
-        { title: "Cylindres de cire, inventaire des enregistrements expérimentaux", score: 86, type: "INVENTAIRE", source: "BnF-Sons-Cylindres" }
-      ],
-      écho: [
-        { title: "Archives phonographiques de la Bibliothèque nationale, 1911", score: 91, type: "CATALOGUE", source: "BnF-Sons-Archives" },
-        { title: "Cylindres de cire, inventaire des enregistrements expérimentaux", score: 86, type: "INVENTAIRE", source: "BnF-Sons-Cylindres" }
-      ],
-      présence: [
-        { title: "Archives phonographiques de la Bibliothèque nationale, 1911", score: 91, type: "CATALOGUE", source: "BnF-Sons-Archives" },
-        { title: "Cylindres de cire, inventaire des enregistrements expérimentaux", score: 86, type: "INVENTAIRE", source: "BnF-Sons-Cylindres" }
-      ]
-    }
-  }
 ];
