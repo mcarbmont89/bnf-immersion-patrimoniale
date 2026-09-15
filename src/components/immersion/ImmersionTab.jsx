@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import FloorPlan from "@/components/immersion/FloorPlan";
 import FloorPlanSorbonne from "@/components/immersion/FloorPlanSorbonne";
 import ImmersiveView from "@/components/immersion/ImmersiveView";
+import SpaceMaterials from "@/components/immersion/SpaceMaterials";
 import { SPACES, SORBONNE_SPACES } from "@/components/immersion/spaces";
 
 export default function ImmersionTab({ onOpenMixer, carriedDoc }) {
@@ -9,6 +10,9 @@ export default function ImmersionTab({ onOpenMixer, carriedDoc }) {
   const spaces = tour === "sorbonne" ? SORBONNE_SPACES : SPACES;
   const [selected, setSelected] = useState(2); // default: Tables de lecture
   const current = spaces.find((s) => s.id === selected);
+  const materialsQuery = current
+    ? `${tour === "sorbonne" ? "Sorbonne" : "Bibliothèque nationale France"} ${current.name}`
+    : "";
 
   function switchTour(t) {
     if (t === tour) return;
@@ -84,6 +88,10 @@ export default function ImmersionTab({ onOpenMixer, carriedDoc }) {
         </div>
         <div className="mt-1 text-[10px] text-[#9CA3AF]/70">
           Distribución de día · esquema orientativo.
+        </div>
+
+        <div className="mt-2 flex-1 min-h-0 flex flex-col">
+          <SpaceMaterials query={materialsQuery} />
         </div>
       </aside>
 
