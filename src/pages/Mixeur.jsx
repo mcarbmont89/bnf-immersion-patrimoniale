@@ -36,6 +36,7 @@ export default function Mixeur() {
   const [loadError, setLoadError] = useState("");
   const [showHeadphoneBanner, setShowHeadphoneBanner] = useState(false);
   const [notice, setNotice] = useState("");
+  const [progress, setProgress] = useState(0);
   const fondFileRef = useRef(null);
 
   async function loadFromArrayBuffer(ab, meta, blob) {
@@ -82,10 +83,19 @@ export default function Mixeur() {
     setSepStatus("Séparation par canal central…");
     setLoadError("");
     setNotice("");
+    setProgress(0);
+    const t0 = Date.now();
+    const iv = setInterval(() => {
+      setProgress(Math.min(100, ((Date.now() - t0) / 1500) * 100));
+    }, 40);
     try {
       await audioEngine.resume();
-      audioEngine.clear();
       const { vocals, instrumental, isMono } = separateCenterChannel(audioBuffer);
+      const elapsed = Date.now() - t0;
+      if (elapsed < 1500) await new Promise((r) => setTimeout(r, 1500 - elapsed));
+      clearInterval(iv);
+      setProgress(100);
+      audioEngine.clear();
       const buffers = { vocals, instrumental };
       const built = [];
       for (const s of fond.stems) {
@@ -103,6 +113,7 @@ export default function Mixeur() {
     } catch (e) {
       setLoadError("Échec de la séparation : " + (e.message || "erreur inconnue"));
     } finally {
+      clearInterval(iv);
       setSeparating(false);
       setSepStatus("");
     }
@@ -196,9 +207,18 @@ export default function Mixeur() {
       {/* source file card */}
       <SourceFileCard audioMeta={audioMeta} separated={separated} separating={separating} onSeparate={separate} />
 
-      {separating && sepStatus && (
-        <div className="rounded-lg bg-[#00C4AA]/10 border border-[#00C4AA]/30 text-[#00C4AA] text-xs px-3 py-2" style={ARIAL}>
-          {sepStatus}
+      {separating && (
+        <div className="rounded-lg bg-[#00C4AA]/10 border border-[#00C4AA]/30 px-3 py-3 flex flex-col gap-2" style={ARIAL}>
+          <div className="flex items-center justify-between text-[#00C4AA] text-xs">
+            <span>{sepStatus || "Séparation en cours…"}</span>
+            <span className="font-mono">{Math.round(progress)}%</span>
+          </div>
+          <div className="w-full h-2 bg-[#0A0D12] rounded-full overflow-hidden">
+            <div
+              className="h-full bg-[#00C4AA] rounded-full transition-all duration-150 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
       )}
 
