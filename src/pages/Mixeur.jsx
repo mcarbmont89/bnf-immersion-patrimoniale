@@ -180,11 +180,6 @@ export default function Mixeur() {
 
   return (
     <div className="h-full flex flex-col gap-3 overflow-auto">
-      {/* amber status banner */}
-      <div className="bg-[#92400E] text-white text-center py-1.5 text-[11px] uppercase tracking-[2px]" style={ARIAL}>
-        Statut : Work in progress · En collaboration avec Eleni-Ira Panourgia
-      </div>
-
       {/* page header */}
       <div>
         <h1 className="text-white text-[28px] font-bold leading-tight" style={ARIAL}>Mixeur 3D Éducatif</h1>
