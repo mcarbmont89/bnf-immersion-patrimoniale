@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Maximize2, Minimize2, Plus, Minus } from "lucide-react";
+import { Maximize2, Minimize2, Plus, Minus, Glasses } from "lucide-react";
+import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import SoundArchiveCard from "./SoundArchiveCard";
@@ -14,7 +15,7 @@ const ZOOM_POINTS = [
   { x: 82, y: 75 }
 ];
 
-export default function ImmersiveView({ spaces, current, onSelect, onOpenMixer, archiveIds }) {
+export default function ImmersiveView({ spaces, current, onSelect, onOpenMixer, archiveIds, tour = "richelieu" }) {
   const [cache, setCache] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -189,6 +190,12 @@ export default function ImmersiveView({ spaces, current, onSelect, onOpenMixer, 
           <span className="rounded-full bg-[#0A0D12]/70 px-2.5 py-1 text-xs font-mono text-white border border-white/10">
             {idx + 1} / {total}
           </span>
+          <Link
+            to={`/xr?tour=${tour}&space=${current}`}
+            className="inline-flex items-center gap-1 rounded-full bg-[#0A0D12]/70 px-3 py-1 text-xs font-semibold text-[#00C4AA] border border-[#00C4AA]/50 hover:bg-[#00C4AA] hover:text-[#0A0D12] transition-colors"
+          >
+            <Glasses size={12} /> Voir en VR
+          </Link>
           <button
             onClick={() => setFullscreen((f) => !f)}
             className="inline-flex items-center gap-1 rounded-full bg-[#00C4AA] px-3 py-1 text-xs font-semibold text-[#0A0D12] hover:bg-[#00B099] transition-colors"
