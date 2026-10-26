@@ -106,6 +106,7 @@ export default function ImmersionTab({ onOpenMixer, carriedDoc }) {
           onSelect={setSelected}
           onOpenMixer={onOpenMixer}
           archiveIds={tour === "richelieu" ? [4, 6] : []}
+          tour={tour}
         />
         <div className="mt-3 shrink-0">
           <Timeline events={timelineEvents} spaceName={current?.name} />
