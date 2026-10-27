@@ -13,6 +13,7 @@ export default function XR() {
         <Link to="/" className="inline-flex items-center gap-1 text-xs text-[#00C4AA]">
           <ArrowLeft size={14} /> Retour
         </Link>
+        <Link to="/clases" className="text-xs text-[#00C4AA]">Clases demo</Link>
         <span className="text-[11px] text-[#9CA3AF]">
           Casque : ouvrez cette page dans le navigateur du Quest, puis « Enter VR ».
         </span>

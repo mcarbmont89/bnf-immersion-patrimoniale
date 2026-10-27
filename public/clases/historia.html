@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0}</style></head><body>
+<title>La Biblioteca de Alejandría</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: escena 3D a la izquierda, guion de la clase y quiz a la derecha; apilado en móvil. */
+:root{
+  --bg:#0b1014; --panel:#121a20; --line:#24323b; --fg:#e9efe9; --muted:#9bb0a8;
+  --accent:#e0a64a; --accent-ink:#1a1204; --teal:#4fd1b5; --bad:#ef8a7a; --ok:#6fd49a;
+  --display:"Fraunces",Georgia,serif; --body:"Public Sans",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 var(--body);
+  padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 16px}
+h1{font:700 26px/1.15 var(--display);margin:0;text-wrap:balance}
+.tag{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px}
+@media(max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.stage{position:relative;aspect-ratio:16/10;min-height:300px;max-width:100%;background:#05080b;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.stage a-scene{width:100%;height:100%}
+.hud{position:absolute;left:10px;right:64px;bottom:10px;display:flex;flex-wrap:wrap;gap:6px;justify-content:space-between;align-items:flex-end;pointer-events:none}
+.hud>*{pointer-events:auto}
+.cap{font:11px var(--mono);color:var(--muted);background:#05080bcc;border:1px solid var(--line);border-radius:6px;padding:5px 8px;max-width:100%}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+button{font:600 13px var(--body);cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg);padding:8px 12px}
+button:hover{border-color:var(--teal)}
+button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.primary:hover{filter:brightness(1.08)}
+button[disabled]{opacity:.45;cursor:default}
+.side{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.steps{display:flex;gap:6px}
+.steps i{flex:1;height:4px;border-radius:2px;background:var(--line)}
+.steps i.on{background:var(--accent)}
+.steps i.done{background:var(--teal)}
+h2{font:700 21px/1.2 var(--display);margin:0;text-wrap:balance}
+.side p{margin:0;max-width:62ch}
+.src{font-size:12px;color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.q{display:flex;flex-direction:column;gap:8px}
+.opt{text-align:left;font-weight:500}
+.opt.ok{border-color:var(--ok);background:#12281d}
+.opt.bad{border-color:var(--bad);background:#2a1714}
+.fb{font-size:14px;border-left:3px solid var(--accent);padding-left:10px}
+.listen{font:500 12px var(--mono);color:var(--teal)}
+.note{font-size:12px;color:var(--muted)}
+.bar{display:flex;gap:6px;align-items:center}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/aframe@1.5.0/dist/aframe-v1.5.0.min.js"></script>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="tag">Clase demo · Historia · 8 minutos</div>
+      <h1>La Biblioteca de Alejandría: cómo se reunía el saber</h1>
+    </div>
+    <div class="note">Escena ilustrativa generada por código, no es una imagen histórica.</div>
+  </header>
+
+  <div class="grid">
+    <div class="stage" id="stage">
+      <a-scene embedded vr-mode-ui="enabled:true" renderer="antialias:true" loading-screen="enabled:false" background="color:#16222b" id="scene">
+        <a-entity id="world"></a-entity>
+        <a-entity id="rig"><a-entity id="cam" camera look-controls="touchEnabled:true" position="0 1.6 0"></a-entity></a-entity>
+      </a-scene>
+      <div class="hud">
+        <div class="cap" id="cap">Pulsa «Empezar la clase» para activar el sonido espacial. Con auriculares se nota mejor.</div>
+        <div class="chips" id="chips"></div>
+      </div>
+    </div>
+
+    <section class="side" id="side" aria-live="polite"></section>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- Contenido de la clase ---------- */
+var STATIONS=[
+ {id:"puerto",az:-70,name:"El puerto",
+  title:"Los libros llegan en barco",
+  text:"Alejandría fue el gran puerto del Mediterráneo oriental. Según relatos antiguos, entre ellos el del médico Galeno, los barcos que atracaban debían entregar sus libros: la biblioteca los copiaba, se quedaba con el original y devolvía la copia. Era una forma de reunir en un solo lugar obras de todo el mundo conocido.",
+  src:"Fuente: relatos antiguos como el de Galeno; los historiadores discuten cuánto de esto es literal.",
+  listen:"Escucha las olas a tu izquierda."},
+ {id:"scriptorium",az:0,name:"La sala de copistas",
+  title:"Rollos de papiro, copiados a mano",
+  text:"Los libros eran rollos de papiro. Los copistas los reproducían a mano, letra a letra. La biblioteca formaba parte del Mouseion, un centro de estudio fundado bajo la dinastía de los Ptolomeos en el siglo III a. C. Nadie sabe cuántos rollos llegó a tener: las estimaciones antiguas y modernas van de decenas de miles a cientos de miles.",
+  src:"Fuente: historiografía general sobre el Mouseion y los Ptolomeos.",
+  listen:"Escucha el rasgueo de las cañas justo delante."},
+ {id:"debate",az:70,name:"La sala de debate",
+  title:"Sabios, catálogos y un final más lento de lo que se cuenta",
+  text:"Entre los eruditos estuvo Eratóstenes, que dirigió la biblioteca y calculó la circunferencia de la Tierra. Calímaco elaboró los Pinakes, uno de los primeros catálogos de una biblioteca. Y la caída no fue un solo incendio: hubo daños durante la guerra de César en el 48 a. C., conflictos posteriores y, sobre todo, un largo declive por falta de apoyo y financiación.",
+  src:"Fuente: consenso historiográfico actual; el «incendio único» es un mito popular.",
+  listen:"Escucha el murmullo de la conversación a tu derecha."}
+];
+var QUIZ=[
+ {q:"Según los relatos antiguos, ¿cómo conseguía la biblioteca muchos de sus libros?",
+  opts:["Copiaba los rollos de los barcos que llegaban al puerto","Los compraba todos en Roma","Los escribían solo sus propios bibliotecarios"],
+  ok:0,st:0,hint:"Vuelve al puerto: los barcos entregaban sus libros para copiarlos."},
+ {q:"¿En qué soporte estaban escritos los libros?",
+  opts:["En tablillas de arcilla","En rollos de papiro","En papel de arroz"],
+  ok:1,st:1,hint:"En la sala de copistas se trabajaba sobre rollos de papiro."},
+ {q:"¿Desapareció la biblioteca en un único incendio?",
+  opts:["Sí, el incendio de César la destruyó por completo","No, hubo varios episodios y un largo declive","No, nunca llegó a existir como edificio"],
+  ok:1,st:2,hint:"En la sala de debate: daños en el 48 a. C. y un declive largo."}
+];
+
+/* ---------- Estado ---------- */
+var S={step:-1,answers:[],spoken:true,audioOn:false,qi:0,wrong:[]};
+var $side=document.getElementById("side"),$cap=document.getElementById("cap"),$chips=document.getElementById("chips");
+
+/* ---------- Audio espacial (HRTF) ---------- */
+var ctx=null,master=null,srcs={},EYE=1.6;
+function noiseBuf(sec){var n=ctx.sampleRate*sec|0,b=ctx.createBuffer(1,n,ctx.sampleRate),d=b.getChannelData(0);for(var i=0;i<n;i++)d[i]=Math.random()*2-1;return b}
+function pos(az,d){var a=az*Math.PI/180;return{x:d*Math.sin(a),y:EYE,z:-d*Math.cos(a)}}
+function mkPanner(p){var n=ctx.createPanner();n.panningModel="HRTF";n.distanceModel="inverse";n.refDistance=1;n.rolloffFactor=1.2;
+  if(n.positionX){n.positionX.value=p.x;n.positionY.value=p.y;n.positionZ.value=p.z}else n.setPosition(p.x,p.y,p.z);
+  n.connect(master);return n}
+function startAudio(){
+  if(S.audioOn)return;
+  try{
+    ctx=new (window.AudioContext||window.webkitAudioContext)();ctx.resume();
+    master=ctx.createGain();master.gain.value=.9;master.connect(ctx.destination);
+    // olas
+    (function(){var p=mkPanner(pos(-70,4)),s=ctx.createBufferSource();s.buffer=noiseBuf(4);s.loop=true;
+      var lp=ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=700;var g=ctx.createGain();g.gain.value=.12;
+      var l=ctx.createOscillator();l.frequency.value=.11;var lg=ctx.createGain();lg.gain.value=.1;l.connect(lg);lg.connect(g.gain);
+      s.connect(lp);lp.connect(g);g.connect(p);s.start();l.start();srcs.puerto={g:g,base:.12}})();
+    // cañas sobre papiro
+    (function(){var p=mkPanner(pos(0,3)),g=ctx.createGain();g.gain.value=1;g.connect(p);srcs.scriptorium={g:g,base:1};
+      (function tick(){if(!ctx)return;var t=ctx.currentTime,b=ctx.createBufferSource();b.buffer=noiseBuf(.5);
+        var bp=ctx.createBiquadFilter();bp.type="bandpass";bp.frequency.value=3200+Math.random()*1500;bp.Q.value=2;
+        var e=ctx.createGain();e.gain.setValueAtTime(0,t);e.gain.linearRampToValueAtTime(.16,t+.02);e.gain.exponentialRampToValueAtTime(.001,t+.12+Math.random()*.2);
+        b.connect(bp);bp.connect(e);e.connect(g);b.start(t);b.stop(t+.5);setTimeout(tick,180+Math.random()*520)})()})();
+    // murmullo de voces
+    (function(){var p=mkPanner(pos(70,3.5)),g=ctx.createGain();g.gain.value=.16;g.connect(p);srcs.debate={g:g,base:.16};
+      [500,800,1200].forEach(function(f,i){var s=ctx.createBufferSource();s.buffer=noiseBuf(3);s.loop=true;
+        var bp=ctx.createBiquadFilter();bp.type="bandpass";bp.frequency.value=f;bp.Q.value=6;var a=ctx.createGain();a.gain.value=.5;
+        var l=ctx.createOscillator();l.frequency.value=.7+i*.45;var lg=ctx.createGain();lg.gain.value=.45;l.connect(lg);lg.connect(a.gain);
+        s.connect(bp);bp.connect(a);a.connect(g);s.start();l.start()})})();
+    S.audioOn=true;
+  }catch(e){ctx=null;setCap("Este navegador no permite audio espacial. La clase sigue con texto y voz.")}
+}
+function setListener(p,f,u){if(!ctx)return;var L=ctx.listener;
+  if(L.positionX){L.positionX.value=p.x;L.positionY.value=p.y;L.positionZ.value=p.z;L.forwardX.value=f.x;L.forwardY.value=f.y;L.forwardZ.value=f.z;L.upX.value=u.x;L.upY.value=u.y;L.upZ.value=u.z}
+  else{L.setPosition(p.x,p.y,p.z);L.setOrientation(f.x,f.y,f.z,u.x,u.y,u.z)}}
+// Resalta la fuente de la estación activa
+function focusSource(id){Object.keys(srcs).forEach(function(k){var s=srcs[k];if(s.g&&ctx)s.g.gain.setTargetAtTime(id===null||k===id?s.base:s.base*.35,ctx.currentTime,.3)})}
+
+/* ---------- Voz (opcional) ---------- */
+function say(t){try{if(!S.spoken||!window.speechSynthesis)return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.lang="es-ES";u.rate=1;speechSynthesis.speak(u)}catch(e){}}
+function hush(){try{window.speechSynthesis&&speechSynthesis.cancel()}catch(e){}}
+
+/* ---------- Escena ---------- */
+var THREE=AFRAME.THREE;
+AFRAME.registerComponent("label",{schema:{t:{default:""},w:{default:640},h:{default:160},c:{default:"#e0a64a"}},
+ init:function(){var d=this.data,c=document.createElement("canvas");c.width=d.w;c.height=d.h;var x=c.getContext("2d");
+  x.fillStyle="#0b1014";x.fillRect(0,0,d.w,d.h);x.strokeStyle=d.c;x.lineWidth=5;x.strokeRect(5,5,d.w-10,d.h-10);
+  x.fillStyle="#e9efe9";x.font="bold 46px Georgia,serif";x.textAlign="center";x.textBaseline="middle";x.fillText(d.t,d.w/2,d.h/2,d.w-30);
+  var tex=new THREE.CanvasTexture(c);if(THREE.SRGBColorSpace)tex.colorSpace=THREE.SRGBColorSpace;var el=this.el;
+  function ap(){var m=el.getObject3D("mesh");if(m){m.material.map=tex;m.material.needsUpdate=true;return true}}
+  if(!ap())el.addEventListener("object3dset",ap,{once:true})}});
+AFRAME.registerComponent("ears",{init:function(){this.p=new THREE.Vector3();this.f=new THREE.Vector3();this.u=new THREE.Vector3();this.q=new THREE.Quaternion()},
+ tick:function(t){var c=this.el.camera;if(!c||!ctx)return;c.getWorldPosition(this.p);c.getWorldDirection(this.f);c.getWorldQuaternion(this.q);this.u.set(0,1,0).applyQuaternion(this.q);
+  setListener(this.p,this.f,this.u);
+  var k=1+.12*Math.sin(t/300);pulses.forEach(function(m){m.el.object3D.scale.setScalar(m.on?k:1)})}});
+var pulses=[];
+AFRAME.registerComponent("billboard",{init:function(){this.p=new THREE.Vector3()},tick:function(){var c=this.el.sceneEl.camera;if(!c)return;c.getWorldPosition(this.p);this.el.object3D.lookAt(this.p)}});
+function el(tag,at,parent){var e=document.createElement(tag);for(var k in at)e.setAttribute(k,at[k]);(parent||document.getElementById("world")).appendChild(e);return e}
+function buildWorld(){
+  var scene=document.getElementById("scene");scene.setAttribute("ears","");
+  el("a-circle",{radius:9,rotation:"-90 0 0",material:"color:#33403f;shader:flat"});
+  el("a-circle",{radius:2.2,rotation:"-90 0 0",position:"0 .01 0",material:"color:#4a5a55;shader:flat"});
+  // columnas en anillo
+  for(var i=0;i<14;i++){var a=i/14*Math.PI*2,r=7.5;if(Math.abs(Math.sin(a))>.97&&Math.cos(a)>0)continue;
+    el("a-cylinder",{radius:.28,height:5,position:(r*Math.sin(a))+" 2.5 "+(-r*Math.cos(a)),material:"color:#8a8f84;shader:flat"})}
+  el("a-ring",{"radius-inner":7.3,"radius-outer":7.7,rotation:"-90 0 0",position:"0 .02 0",material:"color:#e0a64a;shader:flat;opacity:.5;transparent:true"});
+  STATIONS.forEach(function(s,i){var p=pos(s.az,4),g=el("a-entity",{position:p.x+" 0 "+p.z});
+    el("a-cylinder",{radius:.55,height:1,position:"0 .5 0",material:"color:#6b766f;shader:flat"},g);
+    var orb=el("a-sphere",{radius:.22,position:"0 1.4 0",material:"color:#e0a64a;shader:flat"},g);pulses.push({el:orb,on:false,id:s.id});
+    var lab=el("a-plane",{width:1.9,height:.48,position:"0 2.3 0",label:"t:"+s.name+";w:640;h:160"},g);
+    lab.setAttribute("billboard","");
+    orb.classList.add("hit");g.addEventListener("click",function(){go(i)})});
+  var cur=document.querySelector("#cam");cur.setAttribute("cursor","rayOrigin:mouse");
+}
+function faceAz(az){try{var lc=document.getElementById("cam").components["look-controls"];lc.yawObject.rotation.y=-az*Math.PI/180;lc.pitchObject.rotation.x=0}catch(e){}}
+
+/* ---------- Interfaz ---------- */
+function setCap(t){$cap.textContent=t}
+function stepsBar(){var h='<div class="steps">';for(var i=0;i<5;i++){h+='<i class="'+(i<S.step?'done':i===S.step?'on':'')+'"></i>'}return h+'</div>'}
+function chips(){
+  var h="";
+  STATIONS.forEach(function(s,i){h+='<button data-go="'+i+'" '+(S.step<1?"disabled":"")+'>'+s.name+'</button>'});
+  $chips.innerHTML=h;
+  $chips.querySelectorAll("[data-go]").forEach(function(b){b.onclick=function(){go(+b.dataset.go,true)}});
+}
+function activate(id){pulses.forEach(function(m){m.on=(m.id===id)});focusSource(id)}
+function go(i,free){
+  if(!S.audioOn)startAudio();
+  if(!free&&S.step<1)return;
+  S.step=1;S.cur=i;render();
+}
+function render(){
+  var h="";
+  if(S.step===-1){
+    h=stepsBar()+'<h2>Antes de empezar</h2><p>Vas a entrar en una sala con tres estaciones. Cada una suena desde su propio lugar: gira la cabeza o arrastra la escena y el sonido cambia contigo.</p><p class="note">Con auriculares el efecto es completo. En un visor Quest, abre esta página en su navegador y usa «Enter VR».</p><div class="row"><button class="primary" id="start">Empezar la clase</button><button id="voice">Voz: '+(S.spoken?"sí":"no")+'</button></div>';
+    $side.innerHTML=h;activate(null);chips();
+    document.getElementById("start").onclick=function(){startAudio();S.step=0;render()};
+    document.getElementById("voice").onclick=function(){S.spoken=!S.spoken;render()};
+  }else if(S.step===0){
+    var t="Bienvenida. En el siglo tercero antes de Cristo, un rey quiso reunir en un solo lugar todo el saber escrito del mundo. Recorre las tres estaciones, escucha cada una y después responde tres preguntas.";
+    $side.innerHTML=stepsBar()+'<h2>Un rey quiere todos los libros</h2><p>En el siglo III a. C., los Ptolomeos quisieron reunir en Alejandría todo el saber escrito del mundo conocido. Recorre las tres estaciones de la sala y escucha cada una. Después responderás tres preguntas.</p><div class="row"><button class="primary" id="n">Ir a la primera estación</button></div>';
+    chips();activate(null);say(t);setCap("Introducción");
+    document.getElementById("n").onclick=function(){S.step=1;S.cur=0;render()};
+  }else if(S.step===1){
+    var s=STATIONS[S.cur];S.seen=S.seen||{};S.seen[s.id]=1;var all=Object.keys(S.seen).length===3;
+    $side.innerHTML=stepsBar()+'<div class="listen">'+s.listen+'</div><h2>'+s.title+'</h2><p>'+s.text+'</p><p class="src">'+s.src+'</p><div class="row"><button id="rep">Escuchar de nuevo</button><button class="primary" id="nx">'+(all?"Pasar al quiz":"Siguiente estación")+'</button></div>';
+    chips();faceAz(s.az);activate(s.id);setCap("Estación: "+s.name);say(s.title+". "+s.text);
+    document.getElementById("rep").onclick=function(){say(s.title+". "+s.text)};
+    document.getElementById("nx").onclick=function(){hush();if(all){S.step=2;S.qi=0;S.wrong=[];render()}else{S.cur=(S.cur+1)%3;while(S.seen[STATIONS[S.cur].id])S.cur=(S.cur+1)%3;render()}};
+  }else if(S.step===2){
+    var q=QUIZ[S.qi];activate(null);
+    $side.innerHTML=stepsBar()+'<div class="listen">Pregunta '+(S.qi+1)+' de 3</div><h2>'+q.q+'</h2><div class="q" id="opts"></div><div id="fb"></div>';
+    var o=document.getElementById("opts");
+    q.opts.forEach(function(t,i){var b=document.createElement("button");b.className="opt";b.textContent=t;b.onclick=function(){answer(i,b)};o.appendChild(b)});
+    chips();setCap("Quiz");
+  }else{
+    var bad=S.wrong.slice(),sc=3-bad.length;
+    var msg=bad.length?'Te conviene repasar: '+bad.map(function(i){return STATIONS[QUIZ[i].st].name}).join(", ")+'.':'Has respondido todo bien a la primera.';
+    $side.innerHTML=stepsBar()+'<h2>Resultado: '+sc+' de 3</h2><p>'+msg+'</p><p class="note">En la plataforma, este resultado ajusta la siguiente clase: refuerza lo que falló y avanza más deprisa en lo que ya sabes.</p><div class="row">'+bad.map(function(i){return '<button data-r="'+QUIZ[i].st+'">Repasar: '+STATIONS[QUIZ[i].st].name+'</button>'}).join("")+'<button class="primary" id="again">Repetir la clase</button></div>';
+    chips();setCap("Clase terminada");say("Clase terminada. "+msg);
+    $side.querySelectorAll("[data-r]").forEach(function(b){b.onclick=function(){S.step=1;S.cur=+b.dataset.r;render()}});
+    document.getElementById("again").onclick=function(){S={step:0,answers:[],spoken:S.spoken,audioOn:S.audioOn,qi:0,wrong:[],seen:{}};render()};
+  }
+}
+function answer(i,btn){
+  var q=QUIZ[S.qi],fb=document.getElementById("fb"),opts=document.querySelectorAll("#opts .opt");
+  opts.forEach(function(b){b.disabled=true});
+  var good=i===q.ok;
+  btn.classList.add(good?"ok":"bad");if(!good){opts[q.ok].classList.add("ok");S.wrong.push(S.qi)}
+  fb.innerHTML='<p class="fb">'+(good?"Correcto. ":"No exactamente. "+q.hint+" ")+'</p><div class="row" style="margin-top:8px">'+(good?"":'<button id="rv">Ir a repasar esa estación</button>')+'<button class="primary" id="nq">'+(S.qi<2?"Siguiente pregunta":"Ver resultado")+'</button></div>';
+  if(!good)document.getElementById("rv").onclick=function(){S.step=1;S.cur=q.st;S.seen=S.seen||{};render()};
+  document.getElementById("nq").onclick=function(){if(S.qi<2){S.qi++;render()}else{S.step=3;render()}};
+}
+
+var sc=document.getElementById("scene");
+function boot(){buildWorld();render()}
+if(sc.hasLoaded)boot();else sc.addEventListener("loaded",boot);
+})();
+</script>
+
+</body></html>
