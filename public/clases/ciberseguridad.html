@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0}</style></head><body>
+<title>Simulacro de correo falso</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: escena 3D a la izquierda, guion de la clase y quiz a la derecha; apilado en móvil. */
+:root{
+  --bg:#0b1014; --panel:#121a20; --line:#24323b; --fg:#e9efe9; --muted:#9bb0a8;
+  --accent:#e0a64a; --accent-ink:#1a1204; --teal:#4fd1b5; --bad:#ef8a7a; --ok:#6fd49a;
+  --display:"Fraunces",Georgia,serif; --body:"Public Sans",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 var(--body);
+  padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 16px}
+h1{font:700 26px/1.15 var(--display);margin:0;text-wrap:balance}
+.tag{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px}
+@media(max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.stage{position:relative;aspect-ratio:16/10;min-height:300px;max-width:100%;background:#05080b;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.stage a-scene{width:100%;height:100%}
+.hud{position:absolute;left:10px;right:64px;bottom:10px;display:flex;flex-wrap:wrap;gap:6px;justify-content:space-between;align-items:flex-end;pointer-events:none}
+.hud>*{pointer-events:auto}
+.cap{font:11px var(--mono);color:var(--muted);background:#05080bcc;border:1px solid var(--line);border-radius:6px;padding:5px 8px;max-width:100%}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+button{font:600 13px var(--body);cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg);padding:8px 12px}
+button:hover{border-color:var(--teal)}
+button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.primary:hover{filter:brightness(1.08)}
+button[disabled]{opacity:.45;cursor:default}
+.side{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.steps{display:flex;gap:6px}
+.steps i{flex:1;height:4px;border-radius:2px;background:var(--line)}
+.steps i.on{background:var(--accent)}
+.steps i.done{background:var(--teal)}
+h2{font:700 21px/1.2 var(--display);margin:0;text-wrap:balance}
+.side p{margin:0;max-width:62ch}
+.src{font-size:12px;color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.q{display:flex;flex-direction:column;gap:8px}
+.opt{text-align:left;font-weight:500}
+.opt.ok{border-color:var(--ok);background:#12281d}
+.opt.bad{border-color:var(--bad);background:#2a1714}
+.fb{font-size:14px;border-left:3px solid var(--accent);padding-left:10px}
+.listen{font:500 12px var(--mono);color:var(--teal)}
+.note{font-size:12px;color:var(--muted)}
+.bar{display:flex;gap:6px;align-items:center}
+.ctl{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center}
+.ctl label{font:500 12px var(--mono);color:var(--muted)}
+.ctl output{font:500 13px var(--mono);min-width:5ch;text-align:right}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.read{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.read div{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px}
+.read b{display:block;font:500 17px var(--mono);font-variant-numeric:tabular-nums}
+.read span{font-size:11px;color:var(--muted)}
+.opts2{display:flex;flex-wrap:wrap;gap:6px}
+.mini{font-size:12px;padding:6px 10px}
+.mini.on{border-color:var(--accent);color:var(--accent)}
+.mail{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:13px;display:flex;flex-direction:column;gap:4px}
+.mail b{font-weight:600}.mail .from{font:12px var(--mono);color:var(--muted);overflow-wrap:anywhere}
+.say{border-left:3px solid var(--teal);padding-left:10px;font-size:15px}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/aframe@1.5.0/dist/aframe-v1.5.0.min.js"></script>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="tag">Clase demo · Ciberseguridad · 6 minutos</div>
+      <h1>Simulacro: ¿correo fiable o sospechoso?</h1>
+    </div>
+    <div class="note">Entorno de formación: todos los correos, nombres y dominios son ficticios.</div>
+  </header>
+  <div class="grid">
+    <div class="stage" id="stage">
+      <a-scene embedded vr-mode-ui="enabled:true" renderer="antialias:true" loading-screen="enabled:false" background="color:#16222b" id="scene">
+        <a-entity id="world"></a-entity>
+        <a-entity id="rig"><a-entity id="cam" camera look-controls="touchEnabled:true" position="0 1.8 1"></a-entity></a-entity>
+      </a-scene>
+      <div class="hud"><div class="cap" id="cap">Pulsa «Empezar» para activar el sonido espacial. Con auriculares se nota mucho más.</div></div>
+    </div>
+    <section class="side" id="side" aria-live="polite"></section>
+  </div>
+</div>
+<script>
+(function(){
+"use strict";
+var S={step:-1,spoken:true,audioOn:false,qi:0,wrong:[],lab:{}};
+var $side=document.getElementById("side"),$cap=document.getElementById("cap");
+function setCap(t){$cap.textContent=t}
+/* ---- audio ---- */
+var ctx=null,master=null;
+function startAudio(){if(S.audioOn)return;try{ctx=new (window.AudioContext||window.webkitAudioContext)();ctx.resume();master=ctx.createGain();master.gain.value=.9;master.connect(ctx.destination);S.audioOn=true}catch(e){ctx=null}}
+function noiseBuf(sec){var n=ctx.sampleRate*sec|0,b=ctx.createBuffer(1,n,ctx.sampleRate),d=b.getChannelData(0);for(var i=0;i<n;i++)d[i]=Math.random()*2-1;return b}
+function setP(n,x,y,z){if(n.positionX){n.positionX.value=x;n.positionY.value=y;n.positionZ.value=z}else n.setPosition(x,y,z)}
+function panner(x,y,z){var n=ctx.createPanner();n.panningModel="HRTF";n.distanceModel="inverse";n.refDistance=1.5;n.rolloffFactor=1;setP(n,x,y,z);n.connect(master);return n}
+function tone(f,dur,type,pos,gain){if(!ctx)return;var t=ctx.currentTime,p=panner(pos[0],pos[1],pos[2]),o=ctx.createOscillator();o.type=type||"sine";o.frequency.value=f;
+  var g=ctx.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(gain||.3,t+.02);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(g);g.connect(p);o.start(t);o.stop(t+dur+.05)}
+function say(t,lang){try{if(!S.spoken||!window.speechSynthesis)return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.lang=lang||"es-ES";speechSynthesis.speak(u)}catch(e){}}
+function azpos(az,d,y){var a=az*Math.PI/180;return[d*Math.sin(a),y==null?1.6:y,-d*Math.cos(a)]}
+/* ---- escena ---- */
+var THREE=AFRAME.THREE;
+AFRAME.registerComponent("label",{schema:{t:{default:""},w:{default:640},h:{default:160}},
+ init:function(){var d=this.data,c=document.createElement("canvas");c.width=d.w;c.height=d.h;var x=c.getContext("2d");
+  x.fillStyle="#0b1014";x.fillRect(0,0,d.w,d.h);x.strokeStyle="#e0a64a";x.lineWidth=5;x.strokeRect(5,5,d.w-10,d.h-10);
+  x.fillStyle="#e9efe9";x.font="bold "+Math.round(d.h*.29)+"px Georgia,serif";x.textAlign="center";x.textBaseline="middle";x.fillText(d.t,d.w/2,d.h/2,d.w-30);
+  var tex=new THREE.CanvasTexture(c);if(THREE.SRGBColorSpace)tex.colorSpace=THREE.SRGBColorSpace;var el=this.el;
+  function ap(){var m=el.getObject3D("mesh");if(m){m.material.map=tex;m.material.needsUpdate=true;return true}}
+  if(!ap())el.addEventListener("object3dset",ap,{once:true})}});
+AFRAME.registerComponent("billboard",{init:function(){this.p=new THREE.Vector3()},tick:function(){var c=this.el.sceneEl.camera;if(!c)return;c.getWorldPosition(this.p);this.el.object3D.lookAt(this.p)}});
+AFRAME.registerComponent("ears",{init:function(){this.p=new THREE.Vector3();this.f=new THREE.Vector3();this.u=new THREE.Vector3();this.q=new THREE.Quaternion()},
+ tick:function(){var c=this.el.camera;if(!c||!ctx)return;c.getWorldPosition(this.p);c.getWorldDirection(this.f);c.getWorldQuaternion(this.q);this.u.set(0,1,0).applyQuaternion(this.q);
+  var L=ctx.listener;if(L.positionX){L.positionX.value=this.p.x;L.positionY.value=this.p.y;L.positionZ.value=this.p.z;L.forwardX.value=this.f.x;L.forwardY.value=this.f.y;L.forwardZ.value=this.f.z;L.upX.value=this.u.x;L.upY.value=this.u.y;L.upZ.value=this.u.z}
+  else{L.setPosition(this.p.x,this.p.y,this.p.z);L.setOrientation(this.f.x,this.f.y,this.f.z,this.u.x,this.u.y,this.u.z)}}});
+function el(tag,at,parent){var e=document.createElement(tag);for(var k in at)e.setAttribute(k,at[k]);(parent||document.getElementById("world")).appendChild(e);return e}
+function pulse(e){e.setAttribute("animation__p","property:scale;from:1 1 1;to:1.35 1.35 1.35;dir:alternate;loop:3;dur:260")}
+/* ---- lección ---- */
+var CFG=(function(){
+
+var M=[
+ {id:"m1",az:-55,from:"Soporte Banco Ejemplo &lt;aviso@banco-ejemplo-seguro.test&gt;",subj:"URGENTE: su cuenta será bloqueada en 24 horas",body:"Verifique sus datos ahora en http://banco-ejemplo.verificar-cuenta.test/acceso o perderá el acceso.",bad:true,why:"Señales: urgencia con amenaza, dominio que imita al banco pero no es el suyo y un enlace que pide tus datos."},
+ {id:"m2",az:0,from:"Marta (RR. HH.) &lt;marta@tuempresa.example&gt;",subj:"Calendario de vacaciones de noviembre",body:"Hola. Como cada mes, el calendario está en la intranet: https://intranet.tuempresa.example/vacaciones. Cualquier duda, me dices.",bad:false,why:"Es fiable: dominio correcto, tono habitual, sin prisa y el enlace va a la intranet de siempre."},
+ {id:"m3",az:55,from:"Director General &lt;direccion.general@tuempresa-mail.example&gt;",subj:"Necesito un favor ahora",body:"Estoy en una reunión y no puedo hablar. Compra 5 tarjetas regalo de 100 € y envíame los códigos hoy. No me llames.",bad:true,why:"Señales: presión, petición de dinero por un canal inusual, prohibición de verificar por teléfono y un dominio parecido pero distinto («tuempresa-mail»)."}];
+function build(){
+ el("a-plane",{width:30,height:30,rotation:"-90 0 0",material:"color:#2b3438;shader:flat"});
+ M.forEach(function(m){var p=azpos(m.az,3.6,1.7);m.ent=el("a-box",{width:1.5,height:1,depth:.05,position:p[0]+" "+p[1]+" "+p[2],rotation:"0 "+(-m.az)+" 0",material:"color:#e9efe9;shader:flat"});
+  el("a-plane",{width:1.3,height:.3,position:p[0]+" "+(p[1]+.75)+" "+p[2],"label":"t:Correo "+(M.indexOf(m)+1)+";w:420;h:100",billboard:""})});
+ el("a-plane",{width:2.6,height:.38,position:"0 .8 -3","label":"t:Simulacro de formación;w:700;h:110"})}
+function ping(m){tone(1046,.25,"sine",azpos(m.az,3.6,1.7),.3);setTimeout(function(){tone(1318,.3,"sine",azpos(m.az,3.6,1.7),.25)},150);pulse(m.ent)}
+function renderLab(box){
+ box.innerHTML='<div class="opts2">'+M.map(function(m,i){return '<button class="mini'+(S.lab[m.id]?" on":"")+'" data-m="'+i+'">Correo '+(i+1)+(S.lab[m.id]?" ✓":"")+'</button>'}).join("")+'</div><div id="mail" style="margin-top:10px"></div>'
+ box.querySelectorAll("[data-m]").forEach(function(b){b.onclick=function(){openM(+b.dataset.m)}})}
+function openM(i){var m=M[i];ping(m);setCap("Correo "+(i+1));
+ document.getElementById("mail").innerHTML='<div class="mail"><span class="from">De: '+m.from+'</span><b>'+m.subj+'</b><span>'+m.body+'</span></div><div class="row" style="margin-top:8px"><button id="okb">Es fiable</button><button id="susp">Es sospechoso</button></div><div id="mf"></div>';
+ function pick(suspect){var good=suspect===m.bad;document.getElementById("mf").innerHTML='<p class="fb">'+(good?"Correcto. ":"No exactamente. ")+m.why+'</p>';
+  if(good){S.lab[m.id]=1;document.querySelectorAll("[data-m]")[i].classList.add("on");document.querySelectorAll("[data-m]")[i].textContent="Correo "+(i+1)+" ✓";labUpdate()}}
+ document.getElementById("okb").onclick=function(){pick(false)};document.getElementById("susp").onclick=function(){pick(true)}}
+return {introTitle:"Tu bandeja de entrada",introText:"Tres correos llegan con un aviso sonoro desde posiciones distintas. Todos son ficticios. Tu trabajo es decidir cuáles son fiables y cuáles no, y descubrir qué señales delatan el fraude.",
+ labTitle:"Clasifica los tres correos",labText:"Abre cada correo, léelo y decide. Si te equivocas, te explicamos las señales y puedes cambiar tu respuesta.",labNote:"El quiz se abre cuando clasifiques bien los tres.",
+ build:build,renderLab:renderLab,labDone:function(){return M.every(function(m){return S.lab[m.id]})},
+ quiz:[
+ {q:"Antes de pulsar un enlace de un correo, ¿qué conviene hacer?",opts:["Pulsarlo si el correo parece oficial","Ver la dirección real a la que lleva (pasando el ratón o manteniendo pulsado)","Reenviarlo a toda la empresa"],ok:1,hint:"Comprueba el dominio real del enlace antes de pulsarlo, como en el correo 1."},
+ {q:"Has escrito tu contraseña en una web falsa. ¿Qué haces primero?",opts:["Esperar a ver si pasa algo","Cambiarla desde el sitio oficial y avisar al equipo de seguridad","Borrar el correo y no decir nada"],ok:1,hint:"Cambia la contraseña desde la web oficial y avisa cuanto antes."},
+ {q:"¿Qué protege tu cuenta aunque alguien robe tu contraseña?",opts:["Una contraseña más corta","La verificación en dos pasos (MFA)","Cambiar de navegador"],ok:1,hint:"La verificación en dos pasos exige un segundo factor además de la contraseña."}],
+ allOk:"Has detectado las señales de los tres correos y conoces los primeros pasos si caes en uno."};
+})();
+function stepsBar(){var h='<div class="steps">';for(var i=0;i<4;i++)h+='<i class="'+(i<S.step?'done':i===S.step?'on':'')+'"></i>';return h+'</div>'}
+function labUpdate(){var n=document.getElementById("next");if(n)n.disabled=!CFG.labDone()}
+function render(){
+  if(S.step>0&&CFG.leave)CFG.leave();
+  if(S.step===-1){
+    $side.innerHTML=stepsBar()+'<h2>'+CFG.introTitle+'</h2><p>'+CFG.introText+'</p><div class="row"><button class="primary" id="go">Empezar</button><button id="voice">Voz: '+(S.spoken?"sí":"no")+'</button></div>';
+    document.getElementById("go").onclick=function(){startAudio();S.step=0;render()};
+    document.getElementById("voice").onclick=function(){S.spoken=!S.spoken;render()};
+  }else if(S.step===0){
+    $side.innerHTML=stepsBar()+'<h2>'+CFG.labTitle+'</h2><p>'+CFG.labText+'</p><div id="labbox"></div><div class="row"><button class="primary" id="next" disabled>Pasar al quiz</button></div><p class="note">'+CFG.labNote+'</p>';
+    document.getElementById("next").onclick=function(){S.step=1;S.qi=0;S.wrong=[];render()};
+    CFG.renderLab(document.getElementById("labbox"));labUpdate();
+  }else if(S.step===1){
+    var q=CFG.quiz[S.qi];
+    $side.innerHTML=stepsBar()+'<div class="listen">Pregunta '+(S.qi+1)+' de 3</div><h2>'+q.q+'</h2><div class="q" id="opts"></div><div id="fb"></div>';
+    var o=document.getElementById("opts");
+    q.opts.forEach(function(t,i){var b=document.createElement("button");b.className="opt";b.textContent=t;b.onclick=function(){answer(i,b)};o.appendChild(b)});
+  }else{
+    var bad=S.wrong.slice(),sc=3-bad.length;
+    $side.innerHTML=stepsBar()+'<h2>Resultado: '+sc+' de 3</h2><p>'+(bad.length?'Para repasar: '+bad.map(function(i){return CFG.quiz[i].hint}).join(" "):CFG.allOk)+'</p><p class="note">En la plataforma, este resultado decide la siguiente actividad: un reto más difícil si lo tienes claro, o una práctica guiada si no.</p><div class="row"><button class="primary" id="again">Repetir la clase</button></div>';
+    document.getElementById("again").onclick=function(){S.step=0;S.lab={};CFG.reset&&CFG.reset();render()};
+  }
+}
+function answer(i,btn){
+  var q=CFG.quiz[S.qi],opts=document.querySelectorAll("#opts .opt");opts.forEach(function(b){b.disabled=true});
+  var good=i===q.ok;btn.classList.add(good?"ok":"bad");if(!good){opts[q.ok].classList.add("ok");S.wrong.push(S.qi)}
+  document.getElementById("fb").innerHTML='<p class="fb">'+(good?"Correcto.":"No exactamente. "+q.hint)+'</p><div class="row" style="margin-top:8px">'+(good?"":'<button id="lab">Volver a la práctica</button>')+'<button class="primary" id="nq">'+(S.qi<2?"Siguiente pregunta":"Ver resultado")+'</button></div>';
+  if(!good)document.getElementById("lab").onclick=function(){S.step=0;render()};
+  document.getElementById("nq").onclick=function(){if(S.qi<2){S.qi++;render()}else{S.step=2;render()}};
+}
+var sc=document.getElementById("scene");
+function boot(){sc.setAttribute("ears","");CFG.build();render()}
+if(sc.hasLoaded)boot();else sc.addEventListener("loaded",boot);
+})();
+</script>
+
+</body></html>

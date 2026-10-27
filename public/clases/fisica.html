@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0}</style></head><body>
+<title>Laboratorio de tiro parabólico</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: escena 3D a la izquierda, guion de la clase y quiz a la derecha; apilado en móvil. */
+:root{
+  --bg:#0b1014; --panel:#121a20; --line:#24323b; --fg:#e9efe9; --muted:#9bb0a8;
+  --accent:#e0a64a; --accent-ink:#1a1204; --teal:#4fd1b5; --bad:#ef8a7a; --ok:#6fd49a;
+  --display:"Fraunces",Georgia,serif; --body:"Public Sans",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 var(--body);
+  padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 16px}
+h1{font:700 26px/1.15 var(--display);margin:0;text-wrap:balance}
+.tag{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px}
+@media(max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.stage{position:relative;aspect-ratio:16/10;min-height:300px;max-width:100%;background:#05080b;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.stage a-scene{width:100%;height:100%}
+.hud{position:absolute;left:10px;right:64px;bottom:10px;display:flex;flex-wrap:wrap;gap:6px;justify-content:space-between;align-items:flex-end;pointer-events:none}
+.hud>*{pointer-events:auto}
+.cap{font:11px var(--mono);color:var(--muted);background:#05080bcc;border:1px solid var(--line);border-radius:6px;padding:5px 8px;max-width:100%}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+button{font:600 13px var(--body);cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg);padding:8px 12px}
+button:hover{border-color:var(--teal)}
+button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.primary:hover{filter:brightness(1.08)}
+button[disabled]{opacity:.45;cursor:default}
+.side{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.steps{display:flex;gap:6px}
+.steps i{flex:1;height:4px;border-radius:2px;background:var(--line)}
+.steps i.on{background:var(--accent)}
+.steps i.done{background:var(--teal)}
+h2{font:700 21px/1.2 var(--display);margin:0;text-wrap:balance}
+.side p{margin:0;max-width:62ch}
+.src{font-size:12px;color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.q{display:flex;flex-direction:column;gap:8px}
+.opt{text-align:left;font-weight:500}
+.opt.ok{border-color:var(--ok);background:#12281d}
+.opt.bad{border-color:var(--bad);background:#2a1714}
+.fb{font-size:14px;border-left:3px solid var(--accent);padding-left:10px}
+.listen{font:500 12px var(--mono);color:var(--teal)}
+.note{font-size:12px;color:var(--muted)}
+.bar{display:flex;gap:6px;align-items:center}
+.ctl{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center}
+.ctl label{font:500 12px var(--mono);color:var(--muted)}
+.ctl output{font:500 13px var(--mono);min-width:5ch;text-align:right}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.read{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.read div{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px}
+.read b{display:block;font:500 17px var(--mono);font-variant-numeric:tabular-nums}
+.read span{font-size:11px;color:var(--muted)}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/aframe@1.5.0/dist/aframe-v1.5.0.min.js"></script>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="tag">Clase demo · Física · 6 minutos</div>
+      <h1>Tiro parabólico: lanza, mide y descubre la regla</h1>
+    </div>
+    <div class="note">Sin resistencia del aire. Gravedad 9,81 m/s².</div>
+  </header>
+  <div class="grid">
+    <div class="stage" id="stage">
+      <a-scene embedded vr-mode-ui="enabled:true" renderer="antialias:true" loading-screen="enabled:false" background="color:#16222b" id="scene">
+        <a-entity id="world"></a-entity>
+        <a-entity id="rig"><a-entity id="cam" camera look-controls="touchEnabled:true" position="5.6 1.8 7.5"></a-entity></a-entity>
+      </a-scene>
+      <div class="hud"><div class="cap" id="cap">Pulsa «Empezar» para activar el sonido espacial. Con auriculares oirás de dónde cae la bola.</div></div>
+    </div>
+    <section class="side" id="side" aria-live="polite"></section>
+  </div>
+</div>
+<script>
+(function(){
+"use strict";
+var G=9.81,K=0.12; /* 1 m = 0.12 unidades de escena */
+var TARGET=60,TOL=2.5;
+var S={step:-1,spoken:true,audioOn:false,launches:0,hit:false,seen:{},qi:0,wrong:[],last:null,angle:45,speed:25};
+var $side=document.getElementById("side"),$cap=document.getElementById("cap");
+function setCap(t){$cap.textContent=t}
+
+/* Audio espacial */
+var ctx=null,master=null;
+function startAudio(){if(S.audioOn)return;try{ctx=new (window.AudioContext||window.webkitAudioContext)();ctx.resume();master=ctx.createGain();master.gain.value=.9;master.connect(ctx.destination);S.audioOn=true}catch(e){ctx=null}}
+function noiseBuf(sec){var n=ctx.sampleRate*sec|0,b=ctx.createBuffer(1,n,ctx.sampleRate),d=b.getChannelData(0);for(var i=0;i<n;i++)d[i]=Math.random()*2-1;return b}
+function panner(x,y,z){var n=ctx.createPanner();n.panningModel="HRTF";n.distanceModel="inverse";n.refDistance=1.5;n.rolloffFactor=1;
+  if(n.positionX){n.positionX.value=x;n.positionY.value=y;n.positionZ.value=z}else n.setPosition(x,y,z);n.connect(master);return n}
+function whoosh(){if(!ctx)return;var t=ctx.currentTime,p=panner(0,.4,0),b=ctx.createBufferSource();b.buffer=noiseBuf(.6);
+  var bp=ctx.createBiquadFilter();bp.type="bandpass";bp.Q.value=1.2;bp.frequency.setValueAtTime(400,t);bp.frequency.exponentialRampToValueAtTime(2400,t+.4);
+  var g=ctx.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.35,t+.05);g.gain.exponentialRampToValueAtTime(.001,t+.55);
+  b.connect(bp);bp.connect(g);g.connect(p);b.start(t);b.stop(t+.6)}
+function thump(x,hit){if(!ctx)return;var t=ctx.currentTime,p=panner(x,.1,0),o=ctx.createOscillator();o.type="sine";
+  o.frequency.setValueAtTime(hit?520:110,t);o.frequency.exponentialRampToValueAtTime(hit?880:45,t+.25);
+  var g=ctx.createGain();g.gain.setValueAtTime(.7,t);g.gain.exponentialRampToValueAtTime(.001,t+.5);o.connect(g);g.connect(p);o.start(t);o.stop(t+.55)}
+function say(t){try{if(!S.spoken||!window.speechSynthesis)return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.lang="es-ES";speechSynthesis.speak(u)}catch(e){}}
+
+/* Escena */
+var THREE=AFRAME.THREE;
+AFRAME.registerComponent("label",{schema:{t:{default:""},w:{default:640},h:{default:160}},
+ init:function(){var d=this.data,c=document.createElement("canvas");c.width=d.w;c.height=d.h;var x=c.getContext("2d");
+  x.fillStyle="#0b1014";x.fillRect(0,0,d.w,d.h);x.strokeStyle="#e0a64a";x.lineWidth=5;x.strokeRect(5,5,d.w-10,d.h-10);
+  x.fillStyle="#e9efe9";x.font="bold 46px Georgia,serif";x.textAlign="center";x.textBaseline="middle";x.fillText(d.t,d.w/2,d.h/2,d.w-30);
+  var tex=new THREE.CanvasTexture(c);if(THREE.SRGBColorSpace)tex.colorSpace=THREE.SRGBColorSpace;var el=this.el;
+  function ap(){var m=el.getObject3D("mesh");if(m){m.material.map=tex;m.material.needsUpdate=true;return true}}
+  if(!ap())el.addEventListener("object3dset",ap,{once:true})}});
+AFRAME.registerComponent("ears",{init:function(){this.p=new THREE.Vector3();this.f=new THREE.Vector3();this.u=new THREE.Vector3();this.q=new THREE.Quaternion()},
+ tick:function(){var c=this.el.camera;if(!c||!ctx)return;c.getWorldPosition(this.p);c.getWorldDirection(this.f);c.getWorldQuaternion(this.q);this.u.set(0,1,0).applyQuaternion(this.q);
+  var L=ctx.listener;if(L.positionX){L.positionX.value=this.p.x;L.positionY.value=this.p.y;L.positionZ.value=this.p.z;L.forwardX.value=this.f.x;L.forwardY.value=this.f.y;L.forwardZ.value=this.f.z;L.upX.value=this.u.x;L.upY.value=this.u.y;L.upZ.value=this.u.z}
+  else{L.setPosition(this.p.x,this.p.y,this.p.z);L.setOrientation(this.f.x,this.f.y,this.f.z,this.u.x,this.u.y,this.u.z)}}});
+function el(tag,at,parent){var e=document.createElement(tag);for(var k in at)e.setAttribute(k,at[k]);(parent||document.getElementById("world")).appendChild(e);return e}
+var ball,trail=[],ghost=null,cannon;
+function buildWorld(){
+  document.getElementById("scene").setAttribute("ears","");
+  el("a-plane",{width:30,height:16,rotation:"-90 0 0",position:"6 0 0",material:"color:#33403f;shader:flat"});
+  for(var m=0;m<=100;m+=10){var x=m*K;el("a-box",{width:.03,height:.01,depth:1.2,position:x+" .01 0",material:"color:#8a8f84;shader:flat"});
+    if(m%20===0)el("a-plane",{width:.7,height:.2,position:x+" .05 .9",rotation:"-60 0 0","label":"t:"+m+" m;w:320;h:90"})}
+  cannon=el("a-cylinder",{radius:.12,height:.7,position:"0 .25 0",rotation:"0 0 -45",material:"color:#8a8f84;shader:flat"});
+  el("a-sphere",{radius:.2,position:"0 .15 0",material:"color:#6b766f;shader:flat"});
+  /* diana */
+  var tx=TARGET*K;el("a-cylinder",{radius:TOL*K,height:.03,position:tx+" .02 0",material:"color:#ef8a7a;shader:flat"});
+  el("a-cylinder",{radius:TOL*K*.45,height:.04,position:tx+" .03 0",material:"color:#e9efe9;shader:flat"});
+  el("a-plane",{width:1.5,height:.4,position:tx+" 1.2 0","label":"t:Diana · "+TARGET+" m;w:520;h:140"});
+  ball=el("a-sphere",{radius:.16,position:"0 .2 0",material:"color:#e0a64a;shader:flat",visible:false});
+  setAngle(S.angle);
+}
+function setAngle(a){if(cannon)cannon.setAttribute("rotation","0 0 "+(a-90))}
+function clearTrail(){trail.forEach(function(t){t.parentNode&&t.parentNode.removeChild(t)});trail=[]}
+var anim=null;
+function launch(){
+  if(!S.audioOn)startAudio();if(anim)return;
+  var th=S.angle*Math.PI/180,v=S.speed,vx=v*Math.cos(th),vy=v*Math.sin(th),T=2*vy/G,R=vx*T,H=vy*vy/(2*G);
+  clearTrail();ball.setAttribute("visible",true);whoosh();S.launches++;
+  var t0=performance.now(),lastDot=-1;
+  anim=function(now){var t=Math.min((now-t0)/1000*1.6,T); /* el tiempo va 1,6 veces más rápido para que sea ágil */
+    var x=vx*t,y=vy*t-.5*G*t*t;ball.setAttribute("position",(x*K)+" "+(y*K+.2)+" 0");
+    if(t-lastDot>.12){lastDot=t;trail.push(el("a-sphere",{radius:.03,position:(x*K)+" "+(y*K+.2)+" 0",material:"color:#e9efe9;shader:flat;opacity:.7;transparent:true"}))}
+    if(t>=T){var hit=Math.abs(R-TARGET)<=TOL;if(hit)S.hit=true;thump(R*K,hit);anim=null;
+      S.last={a:S.angle,v:v,R:R,H:H,T:T,hit:hit};S.seen[S.angle+"/"+v]={R:R};render();return false}
+    return true}
+  tickAnim();
+}
+function tickAnim(){if(!anim)return;requestAnimationFrame(function(n){if(anim&&anim(n))tickAnim()})}
+
+/* Lección */
+var QUIZ=[
+ {q:"Sin resistencia del aire y con la misma velocidad, ¿qué ángulo da el mayor alcance?",opts:["30°","45°","60°"],ok:1,hint:"Prueba 15°, 30°, 45° y 60° con la misma velocidad y compara el alcance."},
+ {q:"Con la misma velocidad, ¿qué pasa con el alcance a 30° y a 60°?",opts:["Es el mismo","A 60° llega el doble","A 30° llega más lejos"],ok:0,hint:"Lanza con 30° y con 60°, a igual velocidad. Los ángulos complementarios dan el mismo alcance."},
+ {q:"Si doblas la velocidad y mantienes el ángulo, el alcance...",opts:["se dobla","se multiplica por 4","no cambia"],ok:1,hint:"Prueba 45° con 10 m/s y luego con 20 m/s. El alcance depende del cuadrado de la velocidad."}
+];
+function read(){var l=S.last;if(!l)return '<p class="note">Aún no has lanzado. Ajusta ángulo y velocidad y pulsa «Lanzar».</p>';
+  var d=l.R-TARGET,msg=l.hit?"¡Diana! Has acertado.":(d<0?"Te has quedado corto "+Math.abs(d).toFixed(1).replace(".",",")+" m.":"Te has pasado "+d.toFixed(1).replace(".",",")+" m.");
+  return '<div class="read"><div><b>'+l.R.toFixed(1).replace(".",",")+' m</b><span>alcance</span></div><div><b>'+l.H.toFixed(1).replace(".",",")+' m</b><span>altura máx.</span></div><div><b>'+l.T.toFixed(1).replace(".",",")+' s</b><span>tiempo de vuelo</span></div></div><p class="fb">'+msg+'</p>'}
+function stepsBar(){var h='<div class="steps">';for(var i=0;i<4;i++)h+='<i class="'+(i<S.step?'done':i===S.step?'on':'')+'"></i>';return h+'</div>'}
+function render(){
+  if(S.step===-1){
+    $side.innerHTML=stepsBar()+'<h2>Antes de empezar</h2><p>Vas a lanzar una bola con un cañón. Tú eliges el ángulo y la velocidad. Al caer, la bola suena en el punto exacto donde aterriza, así que con auriculares puedes oír si te quedas corto o te pasas.</p><div class="row"><button class="primary" id="go">Empezar</button><button id="voice">Voz: '+(S.spoken?"sí":"no")+'</button></div>';
+    document.getElementById("go").onclick=function(){startAudio();S.step=0;render()};
+    document.getElementById("voice").onclick=function(){S.spoken=!S.spoken;render()};
+  }else if(S.step===0){
+    $side.innerHTML=stepsBar()+'<h2>Misión: acierta la diana a '+TARGET+' m</h2><p>Mueve los controles, lanza y mira dónde cae. No hay una única combinación: explora. Cuando aciertes, o tras unos cuantos lanzamientos, pasa al quiz.</p><div class="ctl"><label for="ang">Ángulo</label><input id="ang" type="range" min="5" max="85" step="1" value="'+S.angle+'"><output id="ango">'+S.angle+'°</output><label for="spd">Velocidad</label><input id="spd" type="range" min="5" max="30" step="1" value="'+S.speed+'"><output id="spdo">'+S.speed+' m/s</output></div><div class="row"><button class="primary" id="fire">Lanzar</button><button id="next" '+((S.hit||S.launches>=4)?"":"disabled")+'>Pasar al quiz</button></div><div id="res">'+read()+'</div><p class="note">Lanzamientos: '+S.launches+'. El quiz se abre al acertar o tras 4 lanzamientos.</p>';
+    var a=document.getElementById("ang"),v=document.getElementById("spd");
+    a.oninput=function(){S.angle=+a.value;document.getElementById("ango").textContent=S.angle+"°";setAngle(S.angle)};
+    v.oninput=function(){S.speed=+v.value;document.getElementById("spdo").textContent=S.speed+" m/s"};
+    document.getElementById("fire").onclick=launch;
+    document.getElementById("next").onclick=function(){S.step=1;S.qi=0;S.wrong=[];render()};
+    if(S.last)setCap(S.last.hit?"Diana":"Último lanzamiento: "+S.last.R.toFixed(1)+" m");
+  }else if(S.step===1){
+    var q=QUIZ[S.qi];
+    $side.innerHTML=stepsBar()+'<div class="listen">Pregunta '+(S.qi+1)+' de 3</div><h2>'+q.q+'</h2><div class="q" id="opts"></div><div id="fb"></div>';
+    var o=document.getElementById("opts");
+    q.opts.forEach(function(t,i){var b=document.createElement("button");b.className="opt";b.textContent=t;b.onclick=function(){answer(i,b)};o.appendChild(b)});
+  }else{
+    var bad=S.wrong.slice(),sc=3-bad.length;
+    $side.innerHTML=stepsBar()+'<h2>Resultado: '+sc+' de 3</h2><p>'+(bad.length?'Experimentos para repasar: '+bad.map(function(i){return QUIZ[i].hint}).join(" "):'Has descubierto la regla por ti mismo: el 45° da el mayor alcance, los ángulos complementarios empatan y el alcance crece con el cuadrado de la velocidad.')+'</p><p class="note">En la plataforma, este resultado decide el siguiente reto: más difícil si lo tienes claro, o un experimento guiado si no.</p><div class="row"><button class="primary" id="again">Repetir la clase</button></div>';
+    document.getElementById("again").onclick=function(){S.step=0;S.launches=0;S.hit=false;S.last=null;clearTrail();render()};
+  }
+}
+function answer(i,btn){
+  var q=QUIZ[S.qi],opts=document.querySelectorAll("#opts .opt");opts.forEach(function(b){b.disabled=true});
+  var good=i===q.ok;btn.classList.add(good?"ok":"bad");if(!good){opts[q.ok].classList.add("ok");S.wrong.push(S.qi)}
+  document.getElementById("fb").innerHTML='<p class="fb">'+(good?"Correcto.":"No exactamente. "+q.hint)+'</p><div class="row" style="margin-top:8px">'+(good?"":'<button id="lab">Volver al laboratorio</button>')+'<button class="primary" id="nq">'+(S.qi<2?"Siguiente pregunta":"Ver resultado")+'</button></div>';
+  if(!good)document.getElementById("lab").onclick=function(){S.step=0;render()};
+  document.getElementById("nq").onclick=function(){if(S.qi<2){S.qi++;render()}else{S.step=2;render()}};
+}
+var sc=document.getElementById("scene");
+function boot(){buildWorld();render()}
+if(sc.hasLoaded)boot();else sc.addEventListener("loaded",boot);
+})();
+</script>
+
+</body></html>
